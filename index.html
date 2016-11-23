@@ -113,6 +113,7 @@
         <div class="events_label">Funnel Steps:</div>
         <div id="add"></div>
       </div>
+      <br>
       <div id="props">
         <div class="events_label">Property Filters:</div>
         <div id="addProps"></div>
@@ -139,11 +140,10 @@
       </div>
       <br>
       <div>
-
+        <div id="table"></div>
       </div>
     </div>
     
-
     <script>
 
       MP.api.setCredentials('7a66766fb54b8f77ba03ada28b0bfb1f');
@@ -409,6 +409,9 @@
         }
       });
 
+      //to do
+      //consolidate the methods for grabbing event, prop, value lists
+
       // run the query
       $('#run').on('click', function() {
         var events = [];
@@ -503,17 +506,11 @@
         // to do:
         // add in customization of length and length unit params
 
+        $('#table').empty();
+
         var selector = '';
         for(i=0; i<propList.length; i++) {
-          //if(i < propList.length - 1) {
-            selector = selector + '(string(properties["' + propList[i] + '"]) == "' + valueList[i] + '") and'
-          //} else {
-          //  if(propList.length == valueList.length) {
-          //    selector = selector + '(string(properties["' + propList[i] + '"]) == "' + valueList[i] + '")'
-          //  } else {
-          //    selector = selector.substring(0, selector.length - 4);
-          //  }
-          //}
+          selector = selector + '(string(properties["' + propList[i] + '"]) == "' + valueList[i] + '") and'
         }
 
         var leftSelector = selector;
@@ -592,36 +589,73 @@
         console.log('right funnel params to query:');
         console.log(leftParams);
 
+        //to do
+        //make the queries not absolutely depend on one another (this is slow in UI)
+
         MP.api.query('/api/2.0/arb_funnels/', leftParams).done(function(results) {
-          var newResults = {};
+          var leftResults = {};
           var dates = Object.keys(results['data']);
+          console.log(results['data']);
           for(j=0; j<dates.length; j++) {
             for(i=0; i<eventList.length; i++) {
-              newResults[eventList[i]] += results['data'][dates[j]]['steps'][i]['count']
-              if(isNaN(newResults[eventList[i]])){
-                newResults[eventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
+              leftResults[eventList[i]] += results['data'][dates[j]]['steps'][i]['count']
+              if(isNaN(leftResults[eventList[i]])){
+                leftResults[eventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
               }
             }
           }
           var leftGraph = $("#funnelLeft").MPChart({chartType: 'bar'});
-          leftGraph.MPChart('setData', newResults);
-        });
+          leftGraph.MPChart('setData', leftResults);
+          console.log(leftResults);
 
-        MP.api.query('/api/2.0/arb_funnels/', rightParams).done(function(results) {
-          var newResults = {};
-          var dates = Object.keys(results['data']);
-          for(j=0; j<dates.length; j++) {
-            for(i=0; i<eventList.length; i++) {
-              newResults[eventList[i]] += results['data'][dates[j]]['steps'][i]['count']
-              if(isNaN(newResults[eventList[i]])){
-                newResults[eventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
+          MP.api.query('/api/2.0/arb_funnels/', rightParams).done(function(results) {
+            var rightResults = {};
+            var dates = Object.keys(results['data']);
+            console.log(results['data']);
+            for(j=0; j<dates.length; j++) {
+              for(i=0; i<eventList.length; i++) {
+                rightResults[eventList[i]] += results['data'][dates[j]]['steps'][i]['count']
+                if(isNaN(rightResults[eventList[i]])){
+                  rightResults[eventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
+                }
               }
             }
-          }
-          var rightGraph = $("#funnelRight").MPChart({chartType: 'bar'});
-          rightGraph.MPChart('setData', newResults);
+            var rightGraph = $("#funnelRight").MPChart({chartType: 'bar'});
+            rightGraph.MPChart('setData', rightResults);
+            console.log(rightResults);
+
+            leftKeysSorted = Object.keys(leftResults).sort(function(a,b){return leftResults[b]-leftResults[a]});
+            rightKeysSorted = Object.keys(rightResults).sort(function(a,b){return rightResults[b]-rightResults[a]});
+
+            stepsMin = Math.max(leftKeysSorted.length, rightKeysSorted.length) - Math.abs(leftKeysSorted.length - rightKeysSorted.length);
+            table = {};
+            table[0] = ['Step', 'Event Count Left', 'Event Count Right', 'Percent Change']
+            for(i=1; i<stepsMin+1; i++) {
+              table[i] = [];
+              table[i].push(i);
+              table[i].push(leftResults[leftKeysSorted[i-1]]);
+              table[i].push(rightResults[rightKeysSorted[i-1]]);
+              table[i].push((((rightResults[rightKeysSorted[i-1]] - leftResults[leftKeysSorted[i-1]]) / leftResults[leftKeysSorted[i-1]]) * 100).toFixed(2).toString() + '%');
+            }
+            table[stepsMin+1] = [];
+            table[stepsMin+1].push('Overall')
+            table[stepsMin+1].push((leftResults[leftKeysSorted[stepsMin-1]] / leftResults[leftKeysSorted[0]] * 100).toFixed(2).toString() + '%');
+            table[stepsMin+1].push((rightResults[rightKeysSorted[stepsMin-1]] / rightResults[rightKeysSorted[0]] * 100).toFixed(2).toString() + '%');
+            table[stepsMin+1].push((rightResults[rightKeysSorted[stepsMin-1]] / rightResults[rightKeysSorted[0]] * 100 - leftResults[leftKeysSorted[stepsMin-1]] / leftResults[leftKeysSorted[0]] * 100).toFixed(2).toString() + '%');
+
+            console.log(table);
+            $('#table').append('<table id="resultsTable" width="100%">');
+            for(i=0; i<stepsMin+2; i++) {
+              $('#table').append('<tr>');
+              for(j=0; j<table[i].length; j++) {
+                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + table[i][j] + '</td>');
+              }
+              $('#table').append('</tr>');
+            }
+            $('#table').append('</table>');
+          });
         });
-      };
+      }
 
     </script>
   </body>
