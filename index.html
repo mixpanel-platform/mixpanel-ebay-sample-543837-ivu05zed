@@ -19,15 +19,15 @@
         margin-left: 8px;
         display: inline-block;
       }
-      .date_select.inline.block, .event_select.inline.block, .prop_select.inline.block, .right-arrow, #add, #addProps, #addLeftProps, #addRightProps {
+      .date_select.inline.block, .event_select_left.inline.block, .event_select_right.inline.block, .prop_select.inline.block, .right-arrow, #add, #leftAdd, #rightAdd, #addProps, #addLeftProps, #addRightProps {
         display: inline-block;
         vertical-align: middle;
       }
-      .event_select.inline.block {
+      .event_select_left.inline.block, .event_select_right.inline.block {
         max-width: 200px;
         margin: 10px 0;
       }
-      .dates {
+      .dates, .options {
         margin-bottom: 10px;
       }
       .right-arrow {
@@ -37,7 +37,7 @@
         width: 10px;
         margin: 10px;
       }
-      #add, #addProps, #addLeftProps, #addRightProps {
+      #add, #leftAdd, #rightAdd, #addProps, #addLeftProps, #addRightProps {
         background: url(https://cdn.mxpnl.com/cache/db85795727e3c42d2865a215cd85876a/images/reports/funnels3/new_row_spritesheet.png);
         width: 30px;
         height: 30px;
@@ -96,22 +96,28 @@
         bottom: 15px;
         right: 35px;
       }
-      .funnelGraph {
+      /*.funnelGraph {
         display: inline-block;
       }
       #funnelLeft, #funnelRight {
         position: center;
         margin: auto;
-      }
+      }*/
     </style>
     <div class="mixpanel-platform-section">
       <div class="dates">
-        <div class="events_label">Date Range:</div>
-        <div id="dates" class="date_select inline block"></div>
+        <div class="events_label">Left Funnel Date Range:</div>
+        <div id="leftDates" class="date_select inline block"></div>
+        <div class="events_label">Right Funnel Date Range:</div>
+        <div id="rightDates" class="date_select inline block"></div>
       </div>
-      <div id="events">
-        <div class="events_label">Funnel Steps:</div>
-        <div id="add"></div>
+      <div id="leftEvents">
+        <div class="events_label">Left Funnel Steps:</div>
+        <div id="leftAdd"></div>
+      </div>
+      <div id="rightEvents">
+        <div class="events_label">Right Funnel Steps:</div>
+        <div id="rightAdd"></div>
       </div>
       <br>
       <div id="props">
@@ -120,23 +126,39 @@
       </div>
       <br>
       <div id="leftProps">
-        <div class="events_label">Funnel Left Property Filters:</div>
+        <div class="events_label">Left Funnel Property Filters:</div>
         <div id="addLeftProps"></div>
       </div>
       <br>
       <div id="rightProps">
-        <div class="events_label">Funnel Right Property Filters:</div>
+        <div class="events_label">Right Funnel Property Filters:</div>
         <div id="addRightProps"></div>
+      </div>
+      <br>
+      <div class="options">
+        <div class="events_label">Totals or Uniques:</div>
+        <div id="queryType" class="date_select inline block"></div>
+        <div class="events_label">Bar or Line Graph:</div>
+        <div id="graphType" class="date_select inline block"></div>
+        <div class="events_label">Units:</div>
+        <div id="unitType" class="date_select inline block"></div>
       </div>
       <br>
       <div id="run">RUN</div>
       <br>
       <div id="graphs">
-        <table><tr>
-          <td width="50%"><div class="funnelGraph" id="funnelLeft" align="center"></div></td>
-          <td width="10%"></td>
-          <td width="50%"><div class="funnelGraph" id="funnelRight" align="center"></div></td>
-        </tr></table>
+        <table>
+          <tr>
+            <td width="400"><div class="events_label" id="left_universe"></div></td>
+            <td width="100"></td>
+            <td width="400"><div class="events_label" id="right_universe"></div></td>
+          </tr>
+          <tr>
+            <td width="400"><div class="funnelGraph" id="funnelLeft"></div><div class="funnelGraph" id="funnelLeftBar"></div></td>
+            <td width="100"></td>
+            <td width="400"><div class="funnelGraph" id="funnelRight"></div><div class="funnelGraph" id="funnelRightBar"></div></td>
+          </tr>
+        </table>
       </div>
       <br>
       <div>
@@ -149,28 +171,62 @@
       MP.api.setCredentials('7a66766fb54b8f77ba03ada28b0bfb1f');
 
       // add elements
-      var eventList = [];
+      var leftEventList = [];
+      var rightEventList = [];
       var propList = [];
       var valueList = [];
       var leftPropList = [];
       var leftValueList = [];
       var rightPropList = [];
       var rightValueList = [];
-      var $events = $('#events');
-      var $add = $('#events').find('#add');
+      var $leftEvents = $('#leftEvents');
+      var $leftAdd = $('#leftEvents').find('#leftAdd');
+      var $rightEvents = $('#rightEvents');
+      var $rightAdd = $('#rightEvents').find('#rightAdd');
       var $props = $('#props');
       var $addProps = $('#props').find('#addProps');
       var $leftProps = $('#leftProps');
       var $addLeftProps = $('#leftProps').find('#addLeftProps');
       var $rightProps = $('#rightProps');
       var $addRightProps = $('#rightProps').find('#addRightProps');
-      $('#dates').MPDatepicker();
+      $('#leftDates').MPDatepicker();
+      $('#rightDates').MPDatepicker();
+      var queryOptions = {
+        items: [
+          {label: 'Unique', value: 'unique'},
+          {label: 'Total', value: 'total'},
+        ]
+      };
+      $('#queryType').MPSelect(queryOptions);
+      var graphOptions = {
+        items: [
+          {label: 'Bar', value: 'bar'},
+          {label: 'Line', value: 'line'},
+        ]
+      };
+      $('#graphType').MPSelect(graphOptions);
+      var unitOptions = {
+        items: [
+          {label: 'Day', value: 'day'},
+          {label: 'Week', value: 'week'},
+          {label: 'Month', value: 'month'},
+        ]
+      };
+      $('#unitType').MPSelect(unitOptions);
 
-      function addEvent(i) {
+
+      function addLeftEvent(i) {
         if (i > 0) {
-          $('<div class="right-arrow"></div>').insertBefore($add);
+          $('<div class="right-arrow"></div>').insertBefore($leftAdd);
         }
-        var eventSelect = $('<div class="event_select inline block" id="' + i + '"></div>').insertBefore($add).MPEventSelect();
+        var eventSelect = $('<div class="event_select_left inline block" id="' + i + '"></div>').insertBefore($leftAdd).MPEventSelect();
+      }
+
+      function addRightEvent(i) {
+        if (i > 0) {
+          $('<div class="right-arrow"></div>').insertBefore($rightAdd);
+        }
+        var eventSelect = $('<div class="event_select_right inline block" id="' + i + '"></div>').insertBefore($rightAdd).MPEventSelect();
       }
 
       function addProp(i) {
@@ -254,12 +310,18 @@
       });
 
       $(document).ready(function() {
-        addEvent(0);
+        addLeftEvent(0);
+        addRightEvent(0);
       });
 
-      $('#add').on('click', function() {
-        var numEvents = $('.event_select').length;
-        addEvent(numEvents);
+      $('#leftAdd').on('click', function() {
+        var numEvents = $('.event_select_left').length;
+        addLeftEvent(numEvents);
+      });
+
+      $('#rightAdd').on('click', function() {
+        var numEvents = $('.event_select_right').length;
+        addRightEvent(numEvents);
       });
 
       $('#addProps').on('click', function() {
@@ -315,14 +377,14 @@
         var numProps = $('.prop_selector_left').length;
 
         var events = [];
-        for (var i = 0, j = $('.event_select').length; i < j; i++) {
-          var eventName = $($('.event_select')[i]).val();
+        for (var i = 0, j = $('.event_select_left').length; i < j; i++) {
+          var eventName = $($('.event_select_left')[i]).val();
           if (eventName != null) {
             events.push(eventName);
           }
         }
-        eventList = events;
-        console.log('event list: ' + eventList);
+        leftEventList = events;
+        console.log('event list: ' + leftEventList);
 
         var leftProps = [];
         for (var i = 0, j = $('.prop_selector_left').length; i < j; i++) {
@@ -364,14 +426,14 @@
         var numProps = $('.prop_selector_right').length;
 
         var events = [];
-        for (var i = 0, j = $('.event_select').length; i < j; i++) {
-          var eventName = $($('.event_select')[i]).val();
+        for (var i = 0, j = $('.event_select_right').length; i < j; i++) {
+          var eventName = $($('.event_select_right')[i]).val();
           if (eventName != null) {
             events.push(eventName);
           }
         }
-        eventList = events;
-        console.log('event list: ' + eventList);
+        rightEventList = events;
+        console.log('event list: ' + rightEventList);
 
         var rightProps = [];
         for (var i = 0, j = $('.prop_selector_right').length; i < j; i++) {
@@ -414,17 +476,28 @@
 
       // run the query
       $('#run').on('click', function() {
-        var events = [];
-        for (var i = 0, j = $('.event_select').length; i < j; i++) {
-          var eventName = $($('.event_select')[i]).val();
+
+        var leftEvents = [];
+        for (var i = 0, j = $('.event_select_left').length; i < j; i++) {
+          var eventName = $($('.event_select_left')[i]).val();
           if (eventName != null) {
-            events.push(eventName);
+            leftEvents.push(eventName);
           }
         }
-        eventList = events;
-        console.log('event list: ' + eventList);
+        leftEventList = leftEvents;
+        console.log('event list: ' + leftEventList);
 
-        if(eventList.length < 2) { 
+        var rightEvents = [];
+        for (var i = 0, j = $('.event_select_right').length; i < j; i++) {
+          var eventName = $($('.event_select_right')[i]).val();
+          if (eventName != null) {
+            rightEvents.push(eventName);
+          }
+        }
+        rightEventList = rightEvents;
+        console.log('event list: ' + rightEventList);
+
+        if(leftEventList.length < 2 || rightEventList.length < 2) { 
           error('Please select more than one event before proceeding');
         } else {
           var props = [];
@@ -469,6 +542,7 @@
             }
             leftValueList = leftValues;
             console.log('left values list: ' + leftValueList);
+
             if(leftValueList.length !== leftPropList.length) {
               error('Please select a left property value before proceeding');
             } else {
@@ -507,6 +581,10 @@
         // add in customization of length and length unit params
 
         $('#table').empty();
+        $("#funnelLeft").empty();
+        $("#funnelRight").empty();
+        $("#funnelLeftBar").empty();
+        $("#funnelRightBar").empty();
 
         var selector = '';
         for(i=0; i<propList.length; i++) {
@@ -521,7 +599,7 @@
             if(leftPropList.length == leftValueList.length) {
               leftSelector = leftSelector + '(string(properties["' + leftPropList[i] + '"]) == "' + leftValueList[i] + '")'
             } else {
-              leftSelector = leftSelector.substring(0, leftSelector.length - 4);
+              leftSelector = leftSelector.substring(0, leftSelector.length - 3);
             }
           }
         }
@@ -537,7 +615,7 @@
             if(rightPropList.length == rightValueList.length) {
               rightSelector = rightSelector + '(string(properties["' + rightPropList[i] + '"]) == "' + rightValueList[i] + '")'
             } else {
-              rightSelector = rightSelector.substring(0, rightSelector.length - 4);
+              rightSelector = rightSelector.substring(0, rightSelector.length - 3);
             }
           }
         }
@@ -546,7 +624,7 @@
         }
 
         var funnelEventsLeft = [];
-        _.each(eventList, function(event) {
+        _.each(leftEventList, function(event) {
           if(leftSelector !== '') {
             funnelEventsLeft.push({"event": event, "selector": leftSelector});
           } else {
@@ -557,19 +635,20 @@
         console.log(funnelEventsLeft);
 
         var leftParams = {
-          length: 14,
-          length_unit: 'day',
-          to: $('#dates').val().to,
-          from: $('#dates').val().from,
-          events: funnelEventsLeft
+          to: $('#leftDates').val().to,
+          from: $('#leftDates').val().from,
+          events: funnelEventsLeft,
+          type: $('#queryType').val(),
+          graph: $('#graphType').val(),
+          unit: $('#unitType').val(),
         };
 
         console.log('left funnel params to query:');
         console.log(leftParams);
 
         var funnelEventsRight = [];
-        _.each(eventList, function(event) {
-          if(rightSelector !== '') {
+        _.each(rightEventList, function(event) {
+          if(rightSelector !== '') {  
             funnelEventsRight.push({"event": event, "selector": rightSelector});
           } else {
             funnelEventsRight.push({"event": event});
@@ -579,28 +658,114 @@
         console.log(funnelEventsRight);
 
         var rightParams = {
-          length: 14,
-          length_unit: 'day',
-          to: $('#dates').val().to,
-          from: $('#dates').val().from,
-          events: funnelEventsRight
+          to: $('#rightDates').val().to,
+          from: $('#rightDates').val().from,
+          events: funnelEventsRight,
+          type: $('#queryType').val(),
+          graph: $('#graphType').val(),
+          unit: $('#unitType').val(),
         };
 
         console.log('right funnel params to query:');
-        console.log(leftParams);
+        console.log(rightParams);
+
+        var scriptCount = $('#jql-count').html();
+
+        MP.api.jql(scriptCount, leftParams).done(function(leftUniqueResults) {
+          var uniquesLeft = {};
+          var leftTotal = 0;
+          _.each(leftUniqueResults, function(item) {
+            uniquesLeft[item.Date] = item.Count;
+            leftTotal += item.Count;
+          })
+          console.log(uniquesLeft);
+          $('#left_universe').text('Active Users: ' + leftTotal);
+          MP.api.jql(scriptCount, rightParams).done(function(rightUniqueResults) {
+            var uniquesRight = {};
+            var rightTotal = 0;
+            _.each(rightUniqueResults, function(item) {
+              uniquesRight[item.Date] = item.Count;
+              rightTotal += item.Count;
+            })
+            console.log(uniquesRight);
+            $('#right_universe').text('Active Users: ' + rightTotal);
+
+              var script = $('#jql-funnel').html();
+
+              MP.api.jql(script, leftParams).done(function(leftResults) {
+                var keys = Object.keys(leftResults[0]);
+                var leftData = {};
+                if($('#graphType').val() == 'line') {
+                  $("#funnelLeft").MPChart({chartType: 'line'});
+                  leftData['Conversion Rate'] = {};
+                  for(i=0; i<keys.length; i++) {
+                    if(!isNaN(keys[i].charAt(0))) {
+                      leftData['Conversion Rate'][keys[i]] = leftResults[0][keys[i]] / uniquesLeft[keys[i]];
+                    }
+                    //to do -- add divide by dau wau mau
+                  }
+                  $("#funnelLeft").MPChart('setData', leftData);
+                  console.log(leftData);
+                }
+                else {
+                  $("#funnelLeftBar").MPChart({chartType: 'bar'});
+                  for(i=0; i<keys.length; i++) {
+                    if(isNaN(keys[i].charAt(0))) {
+                      leftData[keys[i]] = leftResults[0][keys[i]];
+                    }
+                  }
+                  $("#funnelLeftBar").MPChart('setData', leftData);
+                  console.log(leftData);
+                }
+                
+                MP.api.jql(script, rightParams).done(function(rightResults) {
+                  var keys = Object.keys(rightResults[0]);
+                  var rightData = {};
+                  if($('#graphType').val() == 'line') {
+                    $("#funnelRight").MPChart({chartType: 'line'});
+                    rightData['Conversion Rate'] = {};
+                    for(i=0; i<keys.length; i++) {
+                      if(!isNaN(keys[i].charAt(0))) {
+                        rightData['Conversion Rate'][keys[i]] = rightResults[0][keys[i]] / uniquesRight[keys[i]];
+                      }
+                      //to do -- add divide by dau wau mau
+                    }
+                    $("#funnelRight").MPChart('setData', rightData);
+                    console.log(rightData);
+                  }
+                  else {
+                    $("#funnelRightBar").MPChart({chartType: 'bar'});
+                    for(i=0; i<keys.length; i++) {
+                      if(isNaN(keys[i].charAt(0))) {
+                        rightData[keys[i]] = rightResults[0][keys[i]];
+                      }
+                    }
+                    $("#funnelRightBar").MPChart('setData', rightData);
+                    console.log(rightData);
+                  }
+                });
+              });
+
+          });
+
+        });
+
+        
 
         //to do
         //make the queries not absolutely depend on one another (this is slow in UI)
 
-        MP.api.query('/api/2.0/arb_funnels/', leftParams).done(function(results) {
+        
+
+        /*MP.api.query('/api/2.0/arb_funnels/', leftParams).done(function(results) {
           var leftResults = {};
           var dates = Object.keys(results['data']);
           console.log(results['data']);
           for(j=0; j<dates.length; j++) {
-            for(i=0; i<eventList.length; i++) {
-              leftResults[eventList[i]] += results['data'][dates[j]]['steps'][i]['count']
-              if(isNaN(leftResults[eventList[i]])){
-                leftResults[eventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
+            for(i=0; i<leftEventList.length; i++) {
+              leftResults[leftEventList[i]] += results['data'][dates[j]]['steps'][i]['count']
+              if(isNaN(leftResults[leftEventList[i]])){
+                leftResults[leftEventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
               }
             }
           }
@@ -613,10 +778,10 @@
             var dates = Object.keys(results['data']);
             console.log(results['data']);
             for(j=0; j<dates.length; j++) {
-              for(i=0; i<eventList.length; i++) {
-                rightResults[eventList[i]] += results['data'][dates[j]]['steps'][i]['count']
-                if(isNaN(rightResults[eventList[i]])){
-                  rightResults[eventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
+              for(i=0; i<rightEventList.length; i++) {
+                rightResults[rightEventList[i]] += results['data'][dates[j]]['steps'][i]['count']
+                if(isNaN(rightResults[rightEventList[i]])){
+                  rightResults[rightEventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
                 }
               }
             }
@@ -654,9 +819,198 @@
             }
             $('#table').append('</table>');
           });
-        });
+        });*/
       }
 
     </script>
+
+    <script id='jql-count'>
+      function main() {
+        return Events({
+          from_date: params.from.substring(0,10),
+          to_date:   params.to.substring(0,10)
+        })
+        .groupByUser([function(event) { return findDay(params.unit, params.from, event.time) }], mixpanel.reducer.count())
+        .groupBy([function(item) { return item.key[1]; }], mixpanel.reducer.count())
+        .map(function(item) {
+          var obj = {};
+          return {
+            'Date': item.key[0],
+            'Count': item.value
+          }
+        })
+      }
+
+      function findDay(unit, from, time) {
+        var find = new Date(time);
+        var current = new Date(from);
+        if(unit == 'day') {
+          var seconds = 1000 * 60 * 60 * 24;
+        } else if(unit == 'week') {
+          var seconds = 1000 * 60 * 60 * 24 * 7;
+        } else if(unit == 'month') {
+          var seconds = 1000 * 60 * 60 * 24 * 30;
+          var month = true;
+        }
+        while(current < find) {
+          if(month === true) {
+            if(current.getMonth() == 12) {
+              if(new Date(current.getFullYear() + 1, 1, 1) < find) {
+                current = new Date(current.getFullYear() + 1, 1, 1);
+              } else {
+                break;
+              }
+            } else {
+              if(new Date(current.getFullYear(), current.getMonth() + 1, 1) < find) {
+                current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+              } else {
+                break;
+              }
+            }
+          } else {
+            if(new Date(current.getTime() + seconds) < find) {
+              current = new Date(current.getTime() + seconds);
+            } else {
+              break;
+            }
+          }
+        }
+        return current.toISOString().substring(0,10);
+      }
+    </script>
+
+    <script id='jql-funnel'>
+      function main() {
+        return Events({
+          from_date: params.from.substring(0,10),
+          to_date:   params.to.substring(0,10),
+          event_selectors: params.events
+        })
+        .groupByUser(function(state, events) {
+          state = state || getDays(params.unit, params.to, params.from, params.events);
+          _.each(events, function(event) {
+            for(i=0; i<params.events.length; i++) {
+              // any middle step
+              if(i !== 0 && i !== params.events.length-1 && event.name == params.events[i]['event']) {
+                if(state[params.events[i]['event']] == state[params.events[i-1]['event']] - 1) { 
+                  if(params.type == 'unique') {
+                    state[event.name] = 1;
+                  } else {
+                    state[event.name] += 1;
+                  }
+                }
+              } else if(i === 0 && event.name == params.events[i]['event'] && state[params.events[0]['event']] == state[params.events[params.events.length-1]['event']]) { // first step
+                if(params.type == 'unique') {
+                  state[event.name] = 1;
+                } else {
+                  state[event.name] += 1;
+                }
+                state.time = event.time;
+              } else if(i == params.events.length-1 && event.name == params.events[i]['event']) { // final step
+                if(params.type == 'unique') {
+                  if(state[event.name] === 0 && state[params.events[i-1]['event']] == 1) {
+                    var recordDay = findDay(params.unit, params.from, state.time);
+                    state[recordDay] = 1;
+                    state[event.name] = 1;
+                  }
+                } else {
+                  if(state[params.events[i]['event']] == state[params.events[i-1]['event']] - 1) {
+                    var recordDay = findDay(params.unit, params.from, state.time);
+                    state[recordDay] += 1;
+                    state[event.name] += 1;
+                  }
+                }
+              }
+            }
+          })
+          return state;
+        })
+        .map(function(item) {
+          var obj = {};
+          var events = [];
+          for(i=0; i<params.events.length; i++) {
+            events.push(params.events[i]['event']);
+          }
+          var keys = Object.keys(item.value);
+          for(i=0; i<keys.length; i++) {
+            if(keys[i] !== 'time') {
+              obj[keys[i]] = item.value[keys[i]];
+            }
+          }
+          return obj;
+        })
+        .reduce(mixpanel.reducer.object_merge());
+      }
+
+      function getDays(unit, to, from, events) {
+        var obj = {};
+        var start = new Date(from);
+        var end = new Date(new Date(to).getTime() + 60 * 60 * 24 * 1000);
+        var current = start;
+        if(unit == 'day') {
+          var seconds = 1000 * 60 * 60 * 24;
+        } else if(unit == 'week') {
+          var seconds = 1000 * 60 * 60 * 24 * 7;
+        } else if(unit == 'month') {
+          var month = true;
+        }
+        while(current < end) {
+          if(month === true) {
+            obj[current.toISOString().substring(0,10)] = 0;
+            if(current.getMonth() == 12) {
+              current = new Date(current.getFullYear() + 1, 1, 1);
+            } else {
+              current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+            }
+          } else {
+            obj[current.toISOString().substring(0,10)] = 0;
+            current = new Date(current.getTime() + seconds);
+          }
+        }
+        for(i=0; i<events.length; i++) { 
+          obj[events[i]['event']] = 0;
+        }
+        obj['time'] = 0;
+        return obj;
+      }
+
+      function findDay(unit, from, time) {
+        var find = new Date(time);
+        var current = new Date(from);
+        if(unit == 'day') {
+          var seconds = 1000 * 60 * 60 * 24;
+        } else if(unit == 'week') {
+          var seconds = 1000 * 60 * 60 * 24 * 7;
+        } else if(unit == 'month') {
+          var seconds = 1000 * 60 * 60 * 24 * 30;
+          var month = true;
+        }
+        while(current < find) {
+          if(month === true) {
+            if(current.getMonth() == 12) {
+              if(new Date(current.getFullYear() + 1, 1, 1) < find) {
+                current = new Date(current.getFullYear() + 1, 1, 1);
+              } else {
+                break;
+              }
+            } else {
+              if(new Date(current.getFullYear(), current.getMonth() + 1, 1) < find) {
+                current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+              } else {
+                break;
+              }
+            }
+          } else {
+            if(new Date(current.getTime() + seconds) < find) {
+              current = new Date(current.getTime() + seconds);
+            } else {
+              break;
+            }
+          }
+        }
+        return current.toISOString().substring(0,10);
+      }
+    </script>
+
   </body>
 </html>
