@@ -149,14 +149,14 @@
       <div id="graphs">
         <table>
           <tr>
-            <td width="400"><div class="events_label" id="left_universe"></div></td>
+            <td width="600"><div class="events_label" id="left_universe" align="center"></div></td>
             <td width="100"></td>
-            <td width="400"><div class="events_label" id="right_universe"></div></td>
+            <td width="600"><div class="events_label" id="right_universe" align="center"></div></td>
           </tr>
           <tr>
-            <td width="400"><div class="funnelGraph" id="funnelLeft"></div><div class="funnelGraph" id="funnelLeftBar"></div></td>
+            <td width="600"><div class="funnelGraph" id="funnelLeft" align="center"></div><div class="funnelGraph" id="funnelLeftBar" align="center"></div></td>
             <td width="100"></td>
-            <td width="400"><div class="funnelGraph" id="funnelRight"></div><div class="funnelGraph" id="funnelRightBar"></div></td>
+            <td width="600"><div class="funnelGraph" id="funnelRight" align="center"></div><div class="funnelGraph" id="funnelRightBar" align="center"></div></td>
           </tr>
         </table>
       </div>
@@ -690,136 +690,101 @@
             console.log(uniquesRight);
             $('#right_universe').text('Active Users: ' + rightTotal);
 
-              var script = $('#jql-funnel').html();
+            var script = $('#jql-funnel').html();
 
-              MP.api.jql(script, leftParams).done(function(leftResults) {
-                var keys = Object.keys(leftResults[0]);
-                var leftData = {};
+            MP.api.jql(script, leftParams).done(function(leftResults) {
+              var keys = Object.keys(leftResults[0]);
+              var leftData = {};
+              var leftBarData = {};
+              leftData['Conversion Rate'] = {};
+              for(i=0; i<keys.length; i++) {
+                if(!isNaN(keys[i].charAt(0))) {
+                  leftData['Conversion Rate'][keys[i]] = leftResults[0][keys[i]] / uniquesLeft[keys[i]] * 100;
+                }
+              }
+              for(i=0; i<keys.length; i++) {
+                if(isNaN(keys[i].charAt(0))) {
+                  leftBarData[keys[i]] = leftResults[0][keys[i]];
+                }
+              }
+              if($('#graphType').val() == 'line') {
+                $("#funnelLeft").MPChart({chartType: 'line'});
+                $("#funnelLeft").MPChart('setData', leftData);
+              } else {
+                $("#funnelLeftBar").MPChart({chartType: 'bar'});
+                $("#funnelLeftBar").MPChart('setData', leftBarData);
+              }
+              console.log(leftData);
+              console.log(leftBarData);
+              
+              MP.api.jql(script, rightParams).done(function(rightResults) {
+                var keys = Object.keys(rightResults[0]);
+                var rightData = {};
+                var rightBarData = {};
+                rightData['Conversion Rate'] = {};
+                for(i=0; i<keys.length; i++) {
+                  if(!isNaN(keys[i].charAt(0))) {
+                    rightData['Conversion Rate'][keys[i]] = rightResults[0][keys[i]] / uniquesRight[keys[i]] * 100;
+                  }
+                }
+                for(i=0; i<keys.length; i++) {
+                  if(isNaN(keys[i].charAt(0))) {
+                    rightBarData[keys[i]] = rightResults[0][keys[i]];
+                  }
+                }
                 if($('#graphType').val() == 'line') {
-                  $("#funnelLeft").MPChart({chartType: 'line'});
-                  leftData['Conversion Rate'] = {};
-                  for(i=0; i<keys.length; i++) {
-                    if(!isNaN(keys[i].charAt(0))) {
-                      leftData['Conversion Rate'][keys[i]] = leftResults[0][keys[i]] / uniquesLeft[keys[i]];
-                    }
-                    //to do -- add divide by dau wau mau
-                  }
-                  $("#funnelLeft").MPChart('setData', leftData);
-                  console.log(leftData);
+                  $("#funnelRight").MPChart({chartType: 'line'});
+                  $("#funnelRight").MPChart('setData', rightData);
+                } else {
+                  $("#funnelRightBar").MPChart({chartType: 'bar'});
+                  $("#funnelRightBar").MPChart('setData', rightBarData);
                 }
-                else {
-                  $("#funnelLeftBar").MPChart({chartType: 'bar'});
-                  for(i=0; i<keys.length; i++) {
-                    if(isNaN(keys[i].charAt(0))) {
-                      leftData[keys[i]] = leftResults[0][keys[i]];
-                    }
+                console.log(rightData);
+                console.log(rightBarData);
+
+                // comparison table
+                $('#table').append('<table id="resultsTable" width="100%">');
+                $('#table').append('<tr>');
+                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Date' + '</td>');
+                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Left Funnel Conversion' + '</td>');
+                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Right Funnel Conversion' + '</td>');
+                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Funnel Conversion % Change' + '</td>');
+                $('#table').append('</tr>');
+
+                var leftKeys = Object.keys(leftData['Conversion Rate']);
+                var rightKeys = Object.keys(rightData['Conversion Rate']);
+                var keys = _.union(leftKeys, rightKeys);
+                console.log(keys);
+
+                for(i=0; i<keys.length; i++) {
+                  $('#table').append('<tr>');
+                  $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + keys[i] + '</td>');
+                  if(leftData['Conversion Rate'][keys[i]]) {
+                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + (leftData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
+                  } else {
+                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'N/A' + '</td>');
                   }
-                  $("#funnelLeftBar").MPChart('setData', leftData);
-                  console.log(leftData);
+                  if(rightData['Conversion Rate'][keys[i]]) {
+                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + (rightData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
+                  } else {
+                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'N/A' + '</td>');
+                  }
+                  if(leftData['Conversion Rate'][keys[i]] && rightData['Conversion Rate'][keys[i]]) {
+                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + (leftData['Conversion Rate'][keys[i]] - rightData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
+                  } else {
+                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'N/A' + '</td>');
+                  }
+                  $('#table').append('</tr>');
+                  var current = new Date
                 }
-                
-                MP.api.jql(script, rightParams).done(function(rightResults) {
-                  var keys = Object.keys(rightResults[0]);
-                  var rightData = {};
-                  if($('#graphType').val() == 'line') {
-                    $("#funnelRight").MPChart({chartType: 'line'});
-                    rightData['Conversion Rate'] = {};
-                    for(i=0; i<keys.length; i++) {
-                      if(!isNaN(keys[i].charAt(0))) {
-                        rightData['Conversion Rate'][keys[i]] = rightResults[0][keys[i]] / uniquesRight[keys[i]];
-                      }
-                      //to do -- add divide by dau wau mau
-                    }
-                    $("#funnelRight").MPChart('setData', rightData);
-                    console.log(rightData);
-                  }
-                  else {
-                    $("#funnelRightBar").MPChart({chartType: 'bar'});
-                    for(i=0; i<keys.length; i++) {
-                      if(isNaN(keys[i].charAt(0))) {
-                        rightData[keys[i]] = rightResults[0][keys[i]];
-                      }
-                    }
-                    $("#funnelRightBar").MPChart('setData', rightData);
-                    console.log(rightData);
-                  }
-                });
+                $('#table').append('</table>');
               });
-
+            });
           });
-
         });
-
-        
 
         //to do
         //make the queries not absolutely depend on one another (this is slow in UI)
-
-        
-
-        /*MP.api.query('/api/2.0/arb_funnels/', leftParams).done(function(results) {
-          var leftResults = {};
-          var dates = Object.keys(results['data']);
-          console.log(results['data']);
-          for(j=0; j<dates.length; j++) {
-            for(i=0; i<leftEventList.length; i++) {
-              leftResults[leftEventList[i]] += results['data'][dates[j]]['steps'][i]['count']
-              if(isNaN(leftResults[leftEventList[i]])){
-                leftResults[leftEventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
-              }
-            }
-          }
-          var leftGraph = $("#funnelLeft").MPChart({chartType: 'bar'});
-          leftGraph.MPChart('setData', leftResults);
-          console.log(leftResults);
-
-          MP.api.query('/api/2.0/arb_funnels/', rightParams).done(function(results) {
-            var rightResults = {};
-            var dates = Object.keys(results['data']);
-            console.log(results['data']);
-            for(j=0; j<dates.length; j++) {
-              for(i=0; i<rightEventList.length; i++) {
-                rightResults[rightEventList[i]] += results['data'][dates[j]]['steps'][i]['count']
-                if(isNaN(rightResults[rightEventList[i]])){
-                  rightResults[rightEventList[i]] = results['data'][dates[j]]['steps'][i]['count'];
-                }
-              }
-            }
-            var rightGraph = $("#funnelRight").MPChart({chartType: 'bar'});
-            rightGraph.MPChart('setData', rightResults);
-            console.log(rightResults);
-
-            leftKeysSorted = Object.keys(leftResults).sort(function(a,b){return leftResults[b]-leftResults[a]});
-            rightKeysSorted = Object.keys(rightResults).sort(function(a,b){return rightResults[b]-rightResults[a]});
-
-            stepsMin = Math.max(leftKeysSorted.length, rightKeysSorted.length) - Math.abs(leftKeysSorted.length - rightKeysSorted.length);
-            table = {};
-            table[0] = ['Step', 'Event Count Left', 'Event Count Right', 'Percent Change']
-            for(i=1; i<stepsMin+1; i++) {
-              table[i] = [];
-              table[i].push(i);
-              table[i].push(leftResults[leftKeysSorted[i-1]]);
-              table[i].push(rightResults[rightKeysSorted[i-1]]);
-              table[i].push((((rightResults[rightKeysSorted[i-1]] - leftResults[leftKeysSorted[i-1]]) / leftResults[leftKeysSorted[i-1]]) * 100).toFixed(2).toString() + '%');
-            }
-            table[stepsMin+1] = [];
-            table[stepsMin+1].push('Overall')
-            table[stepsMin+1].push((leftResults[leftKeysSorted[stepsMin-1]] / leftResults[leftKeysSorted[0]] * 100).toFixed(2).toString() + '%');
-            table[stepsMin+1].push((rightResults[rightKeysSorted[stepsMin-1]] / rightResults[rightKeysSorted[0]] * 100).toFixed(2).toString() + '%');
-            table[stepsMin+1].push((rightResults[rightKeysSorted[stepsMin-1]] / rightResults[rightKeysSorted[0]] * 100 - leftResults[leftKeysSorted[stepsMin-1]] / leftResults[leftKeysSorted[0]] * 100).toFixed(2).toString() + '%');
-
-            console.log(table);
-            $('#table').append('<table id="resultsTable" width="100%">');
-            for(i=0; i<stepsMin+2; i++) {
-              $('#table').append('<tr>');
-              for(j=0; j<table[i].length; j++) {
-                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + table[i][j] + '</td>');
-              }
-              $('#table').append('</tr>');
-            }
-            $('#table').append('</table>');
-          });
-        });*/
       }
 
     </script>
