@@ -4,14 +4,17 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
+
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
+    <script src="https://cdn.rawgit.com/mp-christine/mp-christine/master/platform/assets/json2csv.js"></script>
+    <script type="text/javascript" src="./credentials.js"></script>    
   </head>
   <body class="mixpanel-platform-body">
-    <style>
     <style>
       body {
         color: #5c617b;
       }
+
       .events_label {
         font-weight: bold;
         font-size: 15px;
@@ -19,7 +22,7 @@
         margin-left: 8px;
         display: inline-block;
       }
-      .date_select.inline.block, .event_select_left.inline.block, .event_select_right.inline.block, .event_select_filter_left.inline.block, .event_select_filter_right.inline.block, .prop_select.inline.block, .behavior_select.inline.block, .right-arrow, #add, #leftAdd, #rightAdd, #leftAddFilter, #rightAddFilter, #addProps, #addLeftProps, #addRightProps {
+      .date_select.inline.block, .event_select_left.inline.block, .event_select_right.inline.block, .event_select_filter_left.inline.block, .event_select_filter_right.inline.block, .prop_select.inline.block, .behavior_select.inline.block, .right-arrow, #add, #leftAdd, #rightAdd, #leftAddFilter, #rightAddFilter, #addProps, #addLeftProps, #addRightProps, #remove, #leftRemove, #rightRemove, #leftRemoveFilter, #rightRemoveFilter, #removeProps, #removeLeftProps, #removeRightProps {
         display: inline-block;
         vertical-align: middle;
       }
@@ -45,9 +48,30 @@
         position: relative;
         margin-left: 15px;
       }
-      #run, #annotationRun {
+      #add:hover, #leftAdd:hover, #rightAdd:hover, #leftAddFilter:hover, #rightAddFilter:hover,
+      #addProps:hover, #addLeftProps:hover, #addRightProps:hover {
+        background-position: 0px -30px;
+      }
+      #add:active, #leftAdd:active, #rightAdd:active, #leftAddFilter:active, #rightAddFilter:active,
+      #addProps:active, #addLeftProps:active, #addRightProps:active {
+        background-position: 0px 30px;
+      }
+      #remove, #leftRemove, #rightRemove, #leftRemoveFilter, #rightRemoveFilter, #removeProps, #removeLeftProps, #removeRightProps {
+        background: url(https://cdn.mxpnl.com/cache/56293702dece344ed45c9d09d46cc548/images/icons/message-x-sprites.png);
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        position: relative;
+        margin-left: 15px;
+      }
+      #remove:hover, #leftRemove:hover, #rightRemove:hover, #leftRemove:hover, #leftRemoveFilter:hover, #rightRemoveFilter:hover, 
+      #removeProps:hover, #removeLeftProps:hover, #removeRightProps:hover {
+        background-position: 0px 18px;
+      }
+      #run, #annotationRun, #export {
         clear:both;
         vertical-align: 1px;
+        text-align: center;
         padding: 6px 12px;
         background-color: #61adf0;
         background-image: -webkit-linear-gradient(#6ab5f2,#53a0ee);
@@ -60,9 +84,8 @@
         border-radius: 3px;
         cursor: pointer;
         font-weight: bold;
-      }
-      #run, #annotationRun {
-        max-width: 26px;
+        max-width: 50px;
+        display: inline-block;
       }
       .alert {
         display: none;
@@ -95,58 +118,127 @@
         position: absolute;
         bottom: 15px;
         right: 35px;
+        padding: 10px 16px;
+        font-weight: 600;
+        background-color: #dedede;
+        border-radius: 3px;
+        transition: all 0.2s;
       }
     </style>
     <div class="mixpanel-platform-section">
-      <div class="dates">
-        <div class="events_label">Left Funnel Date Range:</div>
-        <div id="leftDates" class="date_select inline block"></div>
-        <div class="events_label">Right Funnel Date Range:</div>
-        <div id="rightDates" class="date_select inline block"></div>
+      <div class="column-wrapper">
+        <!-- Left Column -->
+        <div class="column column-left">
+          <h3>Left Funnel</h3>
+
+          <div class="column-section leftDateRange">
+            <div class="events_label">Date Range:</div>
+            <div id="leftDates" class="date_select inline block"></div>
+          </div>
+
+          <div class="column-section" id="leftEventsFilter">
+            <div class="column-label events_label">Prior Activity:</div>
+            <div id="leftAddFilter"></div>
+            <div id="leftRemoveFilter"></div>
+          </div>
+
+          <div class="column-section" id="leftEvents">
+            <div class="column-label events_label">Steps:</div>
+            <div id="leftAdd"></div>
+            <div id="leftRemove"></div>
+          </div>
+
+          <div class="column-section" id="leftProps">
+            <div class="column-label events_label">Property Filters:</div>
+            <div id="addLeftProps"></div>
+            <div id="removeLeftProps"></div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="column column-right">
+        <h3>Right Funnel</h3>
+
+          <div class="column-section rightDateRange">
+            <div class="events_label">Date Range:</div>
+            <div id="rightDates" class="date_select inline block"></div>
+          </div>
+
+          <div class="column-section" id="rightEventsFilter">
+            <div class="column-label events_label">Prior Activity:</div>
+            <div id="rightAddFilter"></div>
+            <div id="rightRemoveFilter"></div>
+          </div>
+
+          <div class="column-section" id="rightEvents">
+            <div class="column-label events_label">Steps:</div>
+            <div id="rightAdd"></div>
+            <div id="rightRemove"></div>
+          </div>
+
+          <div class="column-section" id="rightProps">
+            <div class="column-label events_label">Property Filters:</div>
+            <div id="addRightProps"></div>
+            <div id="removeRightProps"></div>
+          </div>
+        </div>
       </div>
-      <div id="leftEventsFilter">
-        <div class="events_label">Left Funnel Prior Activity:</div>
-        <div id="leftAddFilter"></div>
+
+      <div class="inputs-bottom">
+        <div class="global-prop-filters" id="props">
+          <div class="events_label">Global Property Filters:</div>
+          <div id="addProps"></div>
+          <div id="removeProps"></div>
+        </div>
+
+        <div class="input-toggles">
+          <!-- Toggle for chart count (total/unique) -->
+          <div>
+              <div class="rounded-toggle-title">Chart Count</div>              
+            <div id="chart-count-toggle" class="rounded-toggle-wrapper">
+              <div class="rounded-toggle-text rounded-toggle-text-left rounded-toggle-text-selected">Unique</div>
+              <div class="rounded-toggle-bar">
+                <div class="rounded-toggle-circle rounded-toggle-circle-left"></div>
+              </div>
+              <div class="rounded-toggle-text rounded-toggle-text-right">Total</div>
+            </div>
+          </div>
+          <!-- Toggle for chart type (bar/line) -->
+          <div>
+              <div class="rounded-toggle-title">Chart Type</div>
+            <div id="chart-type-toggle" class="rounded-toggle-wrapper">
+              <div class="rounded-toggle-text rounded-toggle-text-left rounded-toggle-text-selected">Bar</div>
+              <div class="rounded-toggle-bar">
+                <div class="rounded-toggle-circle rounded-toggle-circle-left"></div>
+              </div>
+              <div class="rounded-toggle-text rounded-toggle-text-right">Line</div>
+            </div>
+          </div>
+          <!-- Dropdown for Units -->
+          <div>
+            <div class="rounded-toggle-title">Units</div>
+            <div id="unitType" class="date_select inline block"></div>
+          </div>          
+        </div>
+        
+        <!-- Depracated Dropdowns
+        <div class="options">
+
+
+          <div class="events_label">Totals or Uniques:</div>
+          <div id="queryType" class="date_select inline block"></div>
+          <div class="events_label">Bar or Line Graph:</div>
+          <div id="graphType" class="date_select inline block"></div>
+
+
+        </div>
+        -->
+
+        <div id="run">RUN</div>
       </div>
-      <div id="rightEventsFilter">
-        <div class="events_label">Right Funnel Prior Activity:</div>
-        <div id="rightAddFilter"></div>
-      </div>
-      <div id="leftEvents">
-        <div class="events_label">Left Funnel Steps:</div>
-        <div id="leftAdd"></div>
-      </div>
-      <div id="rightEvents">
-        <div class="events_label">Right Funnel Steps:</div>
-        <div id="rightAdd"></div>
-      </div>
-      <br>
-      <div id="props">
-        <div class="events_label">Global Property Filters:</div>
-        <div id="addProps"></div>
-      </div>
-      <br>
-      <div id="leftProps">
-        <div class="events_label">Left Funnel Property Filters:</div>
-        <div id="addLeftProps"></div>
-      </div>
-      <br>
-      <div id="rightProps">
-        <div class="events_label">Right Funnel Property Filters:</div>
-        <div id="addRightProps"></div>
-      </div>
-      <br>
-      <div class="options">
-        <div class="events_label">Totals or Uniques:</div>
-        <div id="queryType" class="date_select inline block"></div>
-        <div class="events_label">Bar or Line Graph:</div>
-        <div id="graphType" class="date_select inline block"></div>
-        <div class="events_label">Units:</div>
-        <div id="unitType" class="date_select inline block"></div>
-      </div>
-      <br>
-      <div id="run">RUN</div>
-      <br>
+      
+
+      <!-- Begin Results -->
       <div id="graphs">
         <table>
           <tr>
@@ -179,7 +271,81 @@
     
     <script>
 
-      MP.api.setCredentials('7a66766fb54b8f77ba03ada28b0bfb1f');
+      // Toggle variables & logic
+      var chartTypeState = "left";
+      var chartTypeLeft = "bar";
+      var chartTypeRight = "line";
+      var chartTypeVal = chartTypeLeft;
+
+      var chartCountState = "left";
+      var chartCountLeft = "unique";
+      var chartCountRight = "total";
+      var chartCountVal = chartCountLeft;
+
+      $('#chart-type-toggle').on('click', function() {
+        var toggle = $('#chart-type-toggle');
+        // Select Right Toggle
+        if (chartTypeState === 'left') {
+          chartTypeState = 'right';
+          chartTypeVal = chartTypeRight;
+
+          toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-text-selected');
+          toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-text-selected');
+
+          toggle.find($('.rounded-toggle-circle')).removeClass('rounded-toggle-circle-left');
+          toggle.find($('.rounded-toggle-circle')).addClass('rounded-toggle-circle-right');
+
+          toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-circle-left-selected');
+          toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-circle-right-selected');
+        }
+        // Select Left Toggle        
+        else {
+          chartTypeState = 'left';
+          chartTypeVal = chartTypeRight;
+
+          toggle.find($('.rounded-toggle-text-left')).addClass('rounded-toggle-text-selected');
+          toggle.find($('.rounded-toggle-text-right')).removeClass('rounded-toggle-text-selected');
+
+          toggle.find($('.rounded-toggle-circle')).removeClass('rounded-toggle-circle-right');
+          toggle.find($('.rounded-toggle-circle')).addClass('rounded-toggle-circle-left');
+
+          toggle.find($('.rounded-toggle-text-left')).addClass('rounded-toggle-circle-left-selected');
+          toggle.find($('.rounded-toggle-text-right')).removeClass('rounded-toggle-circle-right-selected');                    
+        }
+      });
+
+      $('#chart-count-toggle').on('click', function() {
+        var toggle = $('#chart-count-toggle');
+        // Select Right Toggle
+        if (chartCountState === 'left') {
+          chartCountState = 'right';
+          chartCountVal = chartCountRight;
+
+          toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-text-selected');
+          toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-text-selected');
+
+          toggle.find($('.rounded-toggle-circle')).removeClass('rounded-toggle-circle-left');
+          toggle.find($('.rounded-toggle-circle')).addClass('rounded-toggle-circle-right');
+
+          toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-circle-left-selected');
+          toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-circle-right-selected');
+        }
+        // Select Left Toggle        
+        else {
+          chartCountState = 'left';
+          chartCountVal = chartCountRight;
+
+          toggle.find($('.rounded-toggle-text-left')).addClass('rounded-toggle-text-selected');
+          toggle.find($('.rounded-toggle-text-right')).removeClass('rounded-toggle-text-selected');
+
+          toggle.find($('.rounded-toggle-circle')).removeClass('rounded-toggle-circle-right');
+          toggle.find($('.rounded-toggle-circle')).addClass('rounded-toggle-circle-left');
+
+          toggle.find($('.rounded-toggle-text-left')).addClass('rounded-toggle-circle-left-selected');
+          toggle.find($('.rounded-toggle-text-right')).removeClass('rounded-toggle-circle-right-selected');                    
+        }
+      });
+      // End Toggle variables & logic
 
       // add elements
       var leftEventFilterList = [];
@@ -214,6 +380,8 @@
       $('#leftDates').MPDatepicker();
       $('#rightDates').MPDatepicker();
       $('#annotationRun').hide();
+      /*
+      Currently depracating the dropdowns for queryType and graphType
       var queryOptions = {
         items: [
           {label: 'Unique', value: 'unique'},
@@ -228,6 +396,7 @@
         ]
       };
       $('#graphType').MPSelect(graphOptions);
+      */
       var unitOptions = {
         items: [
           {label: 'Day', value: 'day'},
@@ -236,13 +405,17 @@
         ]
       };
       $('#unitType').MPSelect(unitOptions);
+      var lastLeftData;
+      var lastLeftBarData;
+      var lastRightData;
+      var lastRightBarData;
 
       function addLeftEventFilter(i) {
         if (i > 0) {
-          $('<div class="events_label"> AND </div>').insertBefore($leftAddFilter);
+          $('<div class="events_label left_filter" id="' + i + '"> AND </div>').insertBefore($leftAddFilter);
         }
         var eventSelectFilter = $('<div class="event_select_filter_left inline block" id="' + i + '"></div>').insertBefore($leftAddFilter).MPEventSelect();
-        $('<div class="right-arrow"></div>').insertBefore($leftAddFilter);
+        $('<div class="right-arrow left_filter_events" id="' + i + '"></div>').insertBefore($leftAddFilter);
 
         var options = {};
         options.items = [];
@@ -254,10 +427,10 @@
 
       function addRightEventFilter(i) {
         if (i > 0) {
-          $('<div class="events_label"> AND </div>').insertBefore($rightAddFilter);
+          $('<div class="events_label right_filter" id="' + i + '"> AND </div>').insertBefore($rightAddFilter);
         }
         var eventSelectFilter = $('<div class="event_select_filter_right inline block" id="' + i + '"></div>').insertBefore($rightAddFilter).MPEventSelect();
-        $('<div class="right-arrow"></div>').insertBefore($rightAddFilter);
+        $('<div class="right-arrow right_filter_events" id="' + i + '"></div>').insertBefore($rightAddFilter);
 
         var options = {};
         options.items = [];
@@ -269,28 +442,25 @@
 
       function addLeftEvent(i) {
         if (i > 0) {
-          $('<div class="right-arrow"></div>').insertBefore($leftAdd);
+          $('<div class="right-arrow left_events" id="' + i + '"></div>').insertBefore($leftAdd);
         }
         var eventSelect = $('<div class="event_select_left inline block" id="' + i + '"></div>').insertBefore($leftAdd).MPEventSelect();
       }
 
       function addRightEvent(i) {
         if (i > 0) {
-          $('<div class="right-arrow"></div>').insertBefore($rightAdd);
+          $('<div class="right-arrow right_events" id="' + i + '"></div>').insertBefore($rightAdd);
         }
         var eventSelect = $('<div class="event_select_right inline block" id="' + i + '"></div>').insertBefore($rightAdd).MPEventSelect();
       }
 
       function addProp(i) {
         if (i > 0){
-          //$('<div class="right-arrow"></div>').insertBefore($addProps);
-          var valueBuffer = $('<div class="events_label"> AND </div>').insertBefore($addProps);
+          var valueBuffer = $('<div class="events_label global_filter" id="' + i + '"> AND </div>').insertBefore($addProps);
         }
 
         var propSelect = $('<div class="prop_select inline block prop_selector" id="' + i + '"></div>').insertBefore($addProps).MPPropertySelect();
         propSelect.MPPropertySelect('setEvent', leftEventList[i]);
-
-        console.log(addProps);
 
         propSelect.on('change', function(e, prop) {
             if(priorValues[i]) { // if we already have a property
@@ -306,22 +476,26 @@
                             options.items.push({label: item, value: item});
                         });
 
-                        var placeholder = $('<div id="placeholder"></div>').insertBefore($('.value_selector')[i]);
-                        $($('.value_selector')[i]).remove();
-                        var valueSelect = $('<div class="prop_select inline block value_selector" id="' + i + '"></div>').insertBefore($('#placeholder')[i]).MPSelect(options);
-                        $($('#placeholder')[i]).remove();
+                        if(i == Object.keys(priorValues).length-1) { // final item in array
+                            $($('.value_selector')[i]).remove();
+                            var valueSelect = $('<div class="prop_select inline block value_selector" id="' + i + '"></div>').insertBefore($addProps).MPSelect(options);
+                        } else { // not the final item in array
+                            $($('.value_selector')[i]).remove();
+                            var valueSelect = $('<div class="prop_select inline block value_selector" id="' + i + '"></div>').insertBefore($('.global_filter')[i]).MPSelect(options);
+                        }
                     });
                 }
             } else { // add initial values for props
                 priorValues[i] = prop;
                 propList[i] = prop;
+                $($('.value_selector')[i]).remove();
                 addValue(i);
             }
         });
       }
 
       function addValue(i) {
-        $('<div class="right-arrow"></div>').insertBefore($addProps);
+        $('<div class="right-arrow props_global" id="' + i + '"></div>').insertBefore($addProps);
 
         MP.api.propertyValues(leftEventList[i], propList[i]).done(function(results) {
           var options = {};
@@ -336,7 +510,7 @@
 
       function addLeftProp(i) {
         if (i > 0){
-          var valueLeftBuffer = $('<div class="events_label"> AND </div>').insertBefore($addLeftProps);
+          var valueLeftBuffer = $('<div class="events_label global_filter_left" id="' + i + '"> AND </div>').insertBefore($addLeftProps);
         }
 
         propLeftSelect = $('<div class="prop_select inline block prop_selector_left" id="' + i + '"></div>').insertBefore($addLeftProps).MPPropertySelect();
@@ -356,22 +530,26 @@
                             options.items.push({label: item, value: item});
                         });
 
-                        var leftPlaceholder = $('<div id="leftPlaceholder"></div>').insertBefore($('.value_selector_left')[i]);
-                        $($('.value_selector_left')[i]).remove();
-                        var valueLeftSelect = $('<div class="prop_select inline block value_selector_left" id="' + i + '"></div>').insertBefore($('#leftPlaceholder')[i]).MPSelect(options);
-                        $($('#leftPlaceholder')[i]).remove();
+                        if(i == Object.keys(priorLeftValues).length-1) { // final item in array
+                            $($('.value_selector_left')[i]).remove();
+                            var valueLeftSelect = $('<div class="prop_select inline block value_selector_left" id="' + i + '"></div>').insertBefore($addLeftProps).MPSelect(options);
+                        } else { // not the final item in array
+                            $($('.value_selector_left')[i]).remove();
+                            var valueLeftSelect = $('<div class="prop_select inline block value_selector_left" id="' + i + '"></div>').insertBefore($('.global_filter_left')[i]).MPSelect(options);
+                        }
                     });
                 }
             } else { // add initial values for props
                 priorLeftValues[i] = prop;
                 leftPropList[i] = prop;
+                $($('.value_selector_left')[i]).remove();
                 addLeftValue(i);
             }
         });
       }
 
       function addLeftValue(i) {
-        $('<div class="right-arrow"></div>').insertBefore($addLeftProps);
+        $('<div class="right-arrow props_left" id="' + i + '"></div>').insertBefore($addLeftProps);
 
         MP.api.propertyValues(leftEventList[leftEventList.length-1], leftPropList[i]).done(function(results) {
           var options = {};
@@ -386,7 +564,7 @@
 
       function addRightProp(i) {
         if (i > 0){
-          var valueRightBuffer = $('<div class="events_label"> AND </div>').insertBefore($addRightProps);
+          var valueRightBuffer = $('<div class="events_label global_filter_right" id="' + i + '"> AND </div>').insertBefore($addRightProps);
         }
 
         var propRightSelect = $('<div class="prop_select inline block prop_selector_right" id="' + i + '"></div>').insertBefore($addRightProps).MPPropertySelect();
@@ -406,22 +584,26 @@
                             options.items.push({label: item, value: item});
                         });
 
-                        var rightPlaceholder = $('<div id="rightPlaceholder"></div>').insertBefore($('.value_selector_right')[i]);
-                        $($('.value_selector_right')[i]).remove();
-                        var valueRightSelect = $('<div class="prop_select inline block value_selector_right" id="' + i + '"></div>').insertBefore($('#rightPlaceholder')[i]).MPSelect(options);
-                        $($('#rightPlaceholder')[i]).remove();
+                        if(i == Object.keys(priorRightValues).length-1) { // final item in array
+                            $($('.value_selector_right')[i]).remove();
+                            var valueRightSelect = $('<div class="prop_select inline block value_selector_right" id="' + i + '"></div>').insertBefore($addRightProps).MPSelect(options);
+                        } else { // not the final item in array
+                            $($('.value_selector_right')[i]).remove();
+                            var valueLeftSelect = $('<div class="prop_select inline block value_selector_right" id="' + i + '"></div>').insertBefore($('.global_filter_right')[i]).MPSelect(options);
+                        }
                     });
                 }
             } else { // add initial values for props
                 priorRightValues[i] = prop;
                 rightPropList[i] = prop;
+                $($('.value_selector_right')[i]).remove();
                 addRightValue(i);
             }
         });
       }
 
       function addRightValue(i) {
-        $('<div class="right-arrow"></div>').insertBefore($addRightProps);
+        $('<div class="right-arrow props_right" id="' + i + '"></div>').insertBefore($addRightProps);
 
         MP.api.propertyValues(rightEventList[rightEventList.length-1], rightPropList[i]).done(function(results) {
           var options = {};
@@ -448,10 +630,11 @@
       // add errors when the URL params are invalid
 
       // load the report and load any pre-existing URL params
-      $(document).ready(function() {
+      /*$(document).ready(function() {
         if(window.location.href.split('?').length > 1) { // we have url params
             console.log('Loading saved report params');
             var savedParams = window.location.href.split('?')[1].split('&');
+            console.log(savedParams)
             _.each(savedParams, function(param) {
                 var keyValue = param.split('=');
                 console.log(keyValue);
@@ -562,7 +745,7 @@
             addLeftEvent(0);
             addRightEvent(0);
         }
-      });
+      });*/
 
       $('#leftAddFilter').on('click', function() {
         var numEvents = $('.event_select_filter_left').length;
@@ -721,6 +904,64 @@
         }
       });
 
+      $('#leftRemove').on('click', function() {
+        var numEvents = $('.event_select_left').length;
+        $($('.event_select_left')[numEvents-1]).remove();
+        $($('.left_events')[numEvents-2]).remove();
+      });
+
+      $('#rightRemove').on('click', function() {
+        var numEvents = $('.event_select_right').length;
+        $($('.event_select_right')[numEvents-1]).remove();
+        $($('.right_events')[numEvents-2]).remove();
+      });
+
+      $('#leftRemoveFilter').on('click', function() {
+        var numEvents = $('.event_select_filter_left').length;
+        $($('.event_select_filter_left')[numEvents-1]).remove();
+        $($('.behavior_selector_left')[numEvents-1]).remove();
+        $($('.left_filter_events')[numEvents-1]).remove();
+        $($('.left_filter')[numEvents-2]).remove();
+      });
+
+      $('#rightRemoveFilter').on('click', function() {
+        var numEvents = $('.event_select_filter_right').length;
+        $($('.event_select_filter_right')[numEvents-1]).remove();
+        $($('.behavior_selector_right')[numEvents-1]).remove();
+        $($('.right_filter_events')[numEvents-1]).remove();
+        $($('.right_filter')[numEvents-2]).remove();
+      });
+
+      $('#removeProps').on('click', function() {
+        var numProps = $('.prop_selector').length;
+        console.log(numProps);
+        $($('.value_selector')[numProps-1]).remove();
+        $($('.prop_selector')[numProps-1]).remove();
+        $($('.props_global')[numProps-1]).remove();
+        delete priorValues[numProps-1];
+        $($('.global_filter')[numProps-2]).remove();
+      });
+
+      $('#removeLeftProps').on('click', function() {
+        var numProps = $('.prop_selector_left').length;
+        console.log(numProps);
+        $($('.value_selector_left')[numProps-1]).remove();
+        $($('.prop_selector_left')[numProps-1]).remove();
+        $($('.props_left')[numProps-1]).remove();
+        delete priorLeftValues[numProps-1];
+        $($('.global_filter_left')[numProps-2]).remove();
+      });
+
+      $('#removeRightProps').on('click', function() {
+        var numProps = $('.prop_selector_right').length;
+        console.log(numProps);
+        $($('.value_selector_right')[numProps-1]).remove();
+        $($('.prop_selector_right')[numProps-1]).remove();
+        $($('.props_right')[numProps-1]).remove();
+        delete priorRightValues[numProps-1];
+        $($('.global_filter_right')[numProps-1]).remove();
+      });
+
       //to do
       //consolidate the methods for grabbing event, prop, value lists
 
@@ -789,6 +1030,8 @@
 
         if(leftEventList.length < 2 || rightEventList.length < 2) { 
             error('Please select more than one event before proceeding');
+        } else if(leftEventFilterList.length < 1 || rightEventFilterList.length < 1) { 
+            error('Please select at least one prior activity filter before proceeding');
         } else {
             var props = [];
             for (var i = 0, j = $('.prop_selector').length; i < j; i++) {
@@ -880,7 +1123,7 @@
         $('#annotationText').empty();
         $('#annotationDateInput').remove();
         $('#annotationTextInput').remove();
-        $('#annotationRun').remove();
+        $('#annotationRun').empty();
 
         var selector = '';
         for(i=0; i<propList.length; i++) {
@@ -929,8 +1172,8 @@
         });
         var funnelBehaviorsLeft = [];
         _.each(leftEventFilterList, function(event) {
-          if(leftSelector !== '') {
-            funnelBehaviorsLeft.push({"event": event, "selector": leftSelector});
+          if(selector !== '') {
+            funnelBehaviorsLeft.push({"event": event, "selector": selector.substring(0, selector.length - 3)});
           } else {
             funnelBehaviorsLeft.push({"event": event});
           }
@@ -946,8 +1189,8 @@
           selector: totalLeftEvents,
           behaviors: leftEventFilterList,
           behaviors_values: leftFilterBehaviorList,
-          type: $('#queryType').val(),
-          graph: $('#graphType').val(),
+          type: chartCountVal, // was formerly dropdown with $('#queryType').val()
+          graph: chartTypeVal, // was formerly dropdown with $('#graphType').val()
           unit: $('#unitType').val(),
         };
 
@@ -964,8 +1207,8 @@
         });
         var funnelBehaviorsRight = [];
         _.each(rightEventFilterList, function(event) {
-            if(rightSelector !== '') {  
-                funnelBehaviorsRight.push({"event": event, "selector": rightSelector});
+            if(selector !== '') {  
+                funnelBehaviorsRight.push({"event": event, "selector": selector.substring(0, selector.length - 3)});
             } else {
                 funnelBehaviorsRight.push({"event": event});
             }
@@ -981,8 +1224,8 @@
           selector: totalRightEvents,
           behaviors: rightEventFilterList,
           behaviors_values: rightFilterBehaviorList,
-          type: $('#queryType').val(),
-          graph: $('#graphType').val(),
+          type: chartCountVal, // was formerly dropdown with $('#queryType').val()
+          graph: chartTypeVal, // was formerly dropdown with $('#graphType').val()
           unit: $('#unitType').val(),
         };
 
@@ -992,38 +1235,36 @@
         var leftSegParams = {
           to: $('#leftDates').val().to,
           from: $('#leftDates').val().from,
-          type: 'unique'
+          selector: funnelBehaviorsLeft,
+          unit: $('#unitType').val(),
         }
         var rightSegParams = {
           to: $('#rightDates').val().to,
           from: $('#rightDates').val().from,
-          type: 'unique'
+          selector: funnelBehaviorsRight,
+          unit: $('#unitType').val(),
         }
 
-        var activeEvent = 'App_open';
-        // find left actves on "active" event as full JQL too slow
-        MP.api.segment(activeEvent, leftSegParams).done(function(leftUniqueResults) {
+        var scriptCount = $('#jql-count').html();
+
+        MP.api.jql(scriptCount, leftSegParams).done(function(leftUniqueResults) {
           var uniquesLeft = {};
           var leftTotal = 0;
-          uniquesLeft = leftUniqueResults.values()[activeEvent];
-          var keys = Object.keys(uniquesLeft);
-          for(i=0; i<keys.length; i++) {
-            leftTotal += uniquesLeft[keys[i]];
-          }
+          _.each(leftUniqueResults, function(item) {
+            uniquesLeft[item.Date] = item.Count;
+            leftTotal += item.Count;
+          })
           console.log(uniquesLeft);
-          $('#left_universe').text('Active Users: ' + (leftTotal/keys.length).toFixed(2) + ' per ' + $('#unitType').val());
-
-          // find right actves on "active" event as full JQL too slow
-          MP.api.segment(activeEvent, rightSegParams).done(function(rightUniqueResults) {
+          $('#left_universe').text('Active Users: ' + leftTotal.toLocaleString());
+          MP.api.jql(scriptCount, rightSegParams).done(function(rightUniqueResults) {
             var uniquesRight = {};
             var rightTotal = 0;
-            uniquesRight = rightUniqueResults.values()[activeEvent];
-            var keys = Object.keys(uniquesRight);
-            for(i=0; i<keys.length; i++) {
-              rightTotal += uniquesRight[keys[i]];
-            }
+            _.each(rightUniqueResults, function(item) {
+              uniquesRight[item.Date] = item.Count;
+              rightTotal += item.Count;
+            })
             console.log(uniquesRight);
-            $('#right_universe').text('Active Users: ' + (rightTotal/keys.length).toFixed(2) + ' per ' + $('#unitType').val());
+            $('#right_universe').text('Active Users: ' + rightTotal.toLocaleString());
 
             var script = $('#jql-funnel').html();
 
@@ -1047,7 +1288,7 @@
                     });
                   }
               }
-              if($('#graphType').val() == 'line') {
+              if(chartTypeVal === 'line') {  // was formerly $('#graphType').val() === 'line'
                 $("#funnelLeft").MPChart({chartType: 'line'});
                 $("#funnelLeft").MPChart('setData', leftData);
               } else {
@@ -1056,6 +1297,8 @@
               }
               console.log(leftData);
               console.log(leftBarData);
+              lastLeftData = leftData;
+              lastLeftBarData = leftBarData;
               
               // right funnel data
               MP.api.jql(script, rightParams).done(function(rightResults) {
@@ -1079,7 +1322,7 @@
                 }
 
                 // make the funnel graphs
-                if($('#graphType').val() == 'line') {
+                if(chartTypeVal == 'line') {   // was formerly $('#graphType').val() === 'line'
                   $("#funnelRight").MPChart({chartType: 'line'});
                   $("#funnelRight").MPChart('setData', rightData);
                 } else {
@@ -1088,14 +1331,16 @@
                 }
                 console.log(rightData);
                 console.log(rightBarData);
+                lastRightData = rightData;
+                lastRightBarData = rightBarData;
 
                 // comparison table
-                $('#table').append('<table id="resultsTable" width="100%">');
+                $('#table').append('<table>');
                 $('#table').append('<tr>');
-                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Date' + '</td>');
-                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Left Funnel Conversion' + '</td>');
-                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Right Funnel Conversion' + '</td>');
-                $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Funnel Conversion % Change' + '</td>');
+                $('#table').append('<th class="comparison-table-header" >' + 'Date' + '</th>');
+                $('#table').append('<th class="comparison-table-header" >' + 'Left Funnel Conversion' + '</th>');
+                $('#table').append('<th class="comparison-table-header" >' + 'Right Funnel Conversion' + '</th>');
+                $('#table').append('<th class="comparison-table-header" >' + 'Funnel Conversion % Change' + '</th>');
                 $('#table').append('</tr>');
 
                 var leftKeys = Object.keys(leftData['Conversion Rate']);
@@ -1105,21 +1350,21 @@
 
                 for(i=0; i<keys.length; i++) {
                   $('#table').append('<tr>');
-                  $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + keys[i] + '</td>');
+                  $('#table').append('<td class="comparison-table-data" >' + keys[i] + '</td>');
                   if(leftData['Conversion Rate'][keys[i]]) {
-                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + (leftData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
+                    $('#table').append('<td class="comparison-table-data" >' + (leftData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
                   } else {
-                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'N/A' + '</td>');
+                    $('#table').append('<td class="comparison-table-data" >' + 'N/A' + '</td>');
                   }
                   if(rightData['Conversion Rate'][keys[i]]) {
-                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + (rightData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
+                    $('#table').append('<td class="comparison-table-data" >' + (rightData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
                   } else {
-                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'N/A' + '</td>');
+                    $('#table').append('<td class="comparison-table-data" >' + 'N/A' + '</td>');
                   }
                   if(leftData['Conversion Rate'][keys[i]] && rightData['Conversion Rate'][keys[i]]) {
-                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + (leftData['Conversion Rate'][keys[i]] - rightData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
+                    $('#table').append('<td class="comparison-table-data" >' + (leftData['Conversion Rate'][keys[i]] - rightData['Conversion Rate'][keys[i]]).toFixed(2).toString() + '%' + '</td>');
                   } else {
-                    $('#table').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'N/A' + '</td>');
+                    $('#table').append('<td class="comparison-table-data" >' + 'N/A' + '</td>');
                   }
                   $('#table').append('</tr>');
                   var current = new Date
@@ -1131,14 +1376,14 @@
                     console.log(comments);
                     $('#annotations').append('<table id="annotationsTable" width="100%">');
                     $('#annotations').append('<tr>');
-                    $('#annotations').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Date' + '</td>');
-                    $('#annotations').append('<td width="75%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + 'Annotation' + '</td>');
+                    $('#annotations').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:1px solid #b2b2b2;">' + 'Date' + '</td>');
+                    $('#annotations').append('<td width="75%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:1px solid #b2b2b2;">' + 'Annotation' + '</td>');
                     $('#annotations').append('</tr>');
                     var annotations = comments.annotations;
                     for(i=0; i<annotations.length; i++) {
                         $('#annotations').append('<tr>');
-                        $('#annotations').append('<td width="25%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + annotations[i].date.substring(0,10) + '</td>');
-                        $('#annotations').append('<td width="75%" align="center" style="font-weight: bold;font-size: 15px; text-align:center; border:3px solid #000000;">' + annotations[i].description + '</td>');
+                        $('#annotations').append('<td class="annotation-table-data" >' + annotations[i].date.substring(0,10) + '</td>');
+                        $('#annotations').append('<td class="annotation-table-data" >' + annotations[i].description + '</td>');
                         $('#annotations').append('</tr>');
                     }
                     $('#annotations').append('</table>');
@@ -1159,6 +1404,65 @@
         //make the queries not absolutely depend on one another (this is slow in UI)
       }
 
+      /*$("#export").click(function (event) {
+        var json_to_csv = new json2csv();
+        var csv = "data:text/csv;charset=utf-8," + json_to_csv.jsonToCSV(lastLeftBarData);
+        $(this).attr("href", encodeURI(csv)).attr("download", "Funnel-Export.csv");
+      });*/
+    </script>
+
+    <script id='jql-count'>
+      function main() {
+        return Events({
+          from_date: params.from.substring(0,10),
+          to_date:   params.to.substring(0,10),
+          event_selectors: params.selector
+        })
+        .groupByUser([function(event) { return findDay(params.unit, params.from, event.time) }], mixpanel.reducer.count())
+        .groupBy([function(item) { return item.key[1]; }], mixpanel.reducer.count())
+        .map(function(item) {
+          return {
+            'Date': item.key[0],
+            'Count': item.value
+          }
+        })
+      }
+      function findDay(unit, from, time) {
+        var find = new Date(time);
+        var current = new Date(from);
+        if(unit == 'day') {
+          var seconds = 1000 * 60 * 60 * 24;
+        } else if(unit == 'week') {
+          var seconds = 1000 * 60 * 60 * 24 * 7;
+        } else if(unit == 'month') {
+          var seconds = 1000 * 60 * 60 * 24 * 30;
+          var month = true;
+        }
+        while(current < find) {
+          if(month === true) {
+            if(current.getMonth() == 12) {
+              if(new Date(current.getFullYear() + 1, 1, 1) < find) {
+                current = new Date(current.getFullYear() + 1, 1, 1);
+              } else {
+                break;
+              }
+            } else {
+              if(new Date(current.getFullYear(), current.getMonth() + 1, 1) < find) {
+                current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+              } else {
+                break;
+              }
+            }
+          } else {
+            if(new Date(current.getTime() + seconds) < find) {
+              current = new Date(current.getTime() + seconds);
+            } else {
+              break;
+            }
+          }
+        }
+        return current.toISOString().substring(0,10);
+      }
     </script>
 
     <script id='jql-funnel'>
@@ -1315,5 +1619,6 @@
         }
     </script>
 
+    <link rel="stylesheet" type="text/css" href="./style.css">
   </body>
 </html>
