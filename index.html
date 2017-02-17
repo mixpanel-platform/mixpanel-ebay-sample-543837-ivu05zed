@@ -6,8 +6,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
 
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
-    <script src="https://cdn.rawgit.com/mp-christine/mp-christine/master/platform/assets/json2csv.js"></script>
-    <script type="text/javascript" src="./credentials.js"></script>    
+    <!--<script type="text/javascript" src="./credentials.js"></script>    -->
   </head>
   <body class="mixpanel-platform-body">
     <style>
@@ -235,6 +234,8 @@
         -->
 
         <div id="run">RUN</div>
+        <div id="export">EXPORT</div>
+        <div id="saved"><input type="text" id="input"></input></div>
       </div>
       
 
@@ -363,6 +364,7 @@
       var priorValues = {};
       var priorLeftValues = {};
       var priorRightValues = {};
+      var paramsLoaded = false;
       var $leftEventsFilter = $('#leftEventsFilter');
       var $leftAddFilter = $('#leftEventsFilter').find('#leftAddFilter');
       var $rightEventsFilter = $('#rightEventsFilter');
@@ -405,10 +407,10 @@
         ]
       };
       $('#unitType').MPSelect(unitOptions);
-      var lastLeftData;
-      var lastLeftBarData;
-      var lastRightData;
-      var lastRightBarData;
+      var leftExportData;
+      var rightExportData;
+
+      MP.api.setCredentials('7a66766fb54b8f77ba03ada28b0bfb1f')
 
       function addLeftEventFilter(i) {
         if (i > 0) {
@@ -625,127 +627,6 @@
       $('body').on('click', '.alert-ok', function() {
           $('.alert').remove();
       });
-
-      // to do
-      // add errors when the URL params are invalid
-
-      // load the report and load any pre-existing URL params
-      /*$(document).ready(function() {
-        if(window.location.href.split('?').length > 1) { // we have url params
-            console.log('Loading saved report params');
-            var savedParams = window.location.href.split('?')[1].split('&');
-            console.log(savedParams)
-            _.each(savedParams, function(param) {
-                var keyValue = param.split('=');
-                console.log(keyValue);
-                var key = keyValue[0];
-                var value = keyValue[1];
-                if(key == 'leftEventFilterList') {
-                    leftEventFilterList = value.split(',');
-                    for(i=0; i<leftEventFilterList.length; i++) {
-                        addLeftEventFilter(i);
-                        $($('.event_select_filter_left')[i]).val(leftEventFilterList[i]);
-                    }
-                } else if(key == 'leftEventBehaviorList') {
-                    leftFilterBehaviorList = value.split(',');
-                    for(i=0; i<leftFilterBehaviorList.length; i++) {
-                        $($('.behavior_selector_left')[i]).val(leftFilterBehaviorList[i]);
-                    }
-                } else if(key == 'rightEventFilterList') {
-                    rightEventFilterList = value.split(',');
-                    for(i=0; i<rightEventFilterList.length; i++) {
-                        addRightEventFilter(i);
-                        $($('.event_select_filter_right')[i]).val(rightEventFilterList[i]);
-                    }
-                } else if(key == 'rightEventBehaviorList') {
-                    rightFilterBehaviorList = value.split(',');
-                    for(i=0; i<rightFilterBehaviorList.length; i++) {
-                        $($('.behavior_selector_right')[i]).val(rightFilterBehaviorList[i]);
-                    }
-                } else if(key == 'leftEventList') {
-                    leftEventList = value.split(',');
-                    for(i=0; i<leftEventList.length; i++) {
-                        addLeftEvent(i);
-                        $($('.event_select_left')[i]).val(leftEventList[i]);
-                    }
-                } else if(key == 'rightEventList') {
-                    rightEventList = value.split(',');
-                    for(i=0; i<rightEventList.length; i++) {
-                        addRightEvent(i);
-                        $($('.event_select_right')[i]).val(rightEventList[i]);
-                    }
-                } else if(key == 'propList') {
-                    propList = value.split(',');
-                    for(i=0; i<savedParams.length; i++) {
-                        if(savedParams[i].indexOf('valueList') > -1) {
-                            var values = savedParams[i].split('=');
-                            valueList = values.split(',');
-                        }
-                    }
-                    if(propList.length == valueList.length) {
-                        for(i=0; i<propList.length; i++) {
-                            addProp(i);
-                            $($('.prop_selector')[i]).val(propList[i]);
-                            addValue(i);
-                            $($('.value_selector')[i]).val(valueList[i]);
-                        }
-                    } else {
-                        error('Invalid URL params for propList and/or valueList');
-                    }
-                } else if(key == 'leftPropList') {
-                    lefPropList = value.split(',');
-                    for(i=0; i<savedParams.length; i++) {
-                        if(savedParams[i].indexOf('leftValueList') > -1) {
-                            var values = savedParams[i].split('=');
-                            leftValueList = values.split(',');
-                        }
-                    }
-                    if(lefPropList.length == leftValueList.length) {
-                        for(i=0; i<leftPropList.length; i++) {
-                            addLeftProp(i);
-                            $($('.prop_selector_left')[i]).val(leftPropList[i]);
-                            addLeftValue(i);
-                            $($('.value_selector_left')[i]).val(leftValueList[i]);
-                        }
-                    } else {
-                        error('Invalid URL params for leftPropList and/or leftValueList');
-                    }
-                } else if(key == 'rightPropList') {
-                    righPropList = value.split(',');
-                    for(i=0; i<savedParams.length; i++) {
-                        if(savedParams[i].indexOf('rightValueList') > -1) {
-                            var values = savedParams[i].split('=');
-                            rightValueList = values.split(',');
-                        }
-                    }
-                    if(rightPropList.length == rightValueList.length) {
-                        for(i=0; i<rightPropList.length; i++) {
-                            addLeftProp(i);
-                            $($('.prop_selector_right')[i]).val(rightPropList[i]);
-                            addLeftValue(i);
-                            $($('.value_selector_right')[i]).val(rightValueList[i]);
-                        }
-                    } else {
-                        error('Invalid URL params for rightPropList and/or rightValueList');
-                    }
-
-                } else if(key = 'type') {
-                    $('#queryType').val(value);
-                } else if(key == 'graph') {
-                    $('#graphType').val(value);
-                } else if(key == 'unit') {
-                    $('#unitType').val(value);
-                }
-            });
-            // can we just jump to running the query here?
-            runQuery();
-        } else { // this is a new report which has no saved history
-            addLeftEventFilter(0);
-            addRightEventFilter(0);
-            addLeftEvent(0);
-            addRightEvent(0);
-        }
-      });*/
 
       $('#leftAddFilter').on('click', function() {
         var numEvents = $('.event_select_filter_left').length;
@@ -968,132 +849,269 @@
       // run error checks when button is clicked
       $('#run').on('click', function() {
 
-        var leftFilterEvents = [];
-        for (var i = 0, j = $('.event_select_filter_left').length; i < j; i++) {
-          var eventName = $($('.event_select_filter_left')[i]).val();
-          if (eventName != null) {
-            leftFilterEvents.push(eventName);
+        var savedParams = document.getElementById("input");
+        if (savedParams && savedParams.value) { // we have saved parameters
+          
+          console.log('Found stored params');
+          console.log(savedParams.value);
+          var allParams = savedParams.value.split('&');
+
+          _.each(allParams, function(param) {
+              var keyValue = param.split('=');
+              console.log(keyValue);
+              var key = keyValue[0];
+              var value = keyValue[1];
+              if(key == 'leftEventFilterList') {
+                  leftEventFilterList = value.split(',');
+                  for(i=0; i<leftEventFilterList.length; i++) {
+                    if(!paramsLoaded) {
+                      addLeftEventFilter(i);
+                    }
+                    $($('.event_select_filter_left')[i]).val([leftEventFilterList[i]]);
+                  }
+              } else if(key == 'leftEventBehaviorList') {
+                  leftFilterBehaviorList = value.split(',');
+                  for(i=0; i<leftFilterBehaviorList.length; i++) {
+                    $($('.behavior_selector_left')[i]).val([leftFilterBehaviorList[i]]);
+                  }
+              } else if(key == 'rightEventFilterList') {
+                  rightEventFilterList = value.split(',');
+                  for(i=0; i<rightEventFilterList.length; i++) {
+                    if(!paramsLoaded) {
+                      addRightEventFilter(i);
+                    }
+                    $($('.event_select_filter_right')[i]).val([rightEventFilterList[i]]);
+                  }
+              } else if(key == 'rightEventBehaviorList') {
+                  rightFilterBehaviorList = value.split(',');
+                  for(i=0; i<rightFilterBehaviorList.length; i++) {
+                    $($('.behavior_selector_right')[i]).val([rightFilterBehaviorList[i]]);
+                  }
+              } else if(key == 'leftEventList') {
+                  leftEventList = value.split(',');
+                  for(i=0; i<leftEventList.length; i++) {
+                    if(!paramsLoaded) {
+                      addLeftEvent(i);
+                    }
+                    $($('.event_select_left')[i]).val([leftEventList[i]]);
+                  }
+              } else if(key == 'rightEventList') {
+                  rightEventList = value.split(',');
+                  for(i=0; i<rightEventList.length; i++) {
+                    if(!paramsLoaded) {
+                      addRightEvent(i);
+                    }
+                    $($('.event_select_right')[i]).val([rightEventList[i]]);
+                  }
+              } else if(key == 'propList') {
+                  propList = value.split(',');
+                  for(i=0; i<savedParams.length; i++) {
+                      if(savedParams[i].indexOf('valueList') > -1) {
+                          var values = savedParams[i].split('=');
+                          valueList = values.split(',');
+                      }
+                  }
+                  if(propList.length == valueList.length) {
+                      for(i=0; i<propList.length; i++) {
+                        if(!paramsLoaded) {
+                          addProp(i);
+                          addValue(i);
+                        }
+                        $($('.prop_selector')[i]).val(propList[i]);
+                        $($('.value_selector')[i]).val(valueList[i]);
+                      }
+                  } else {
+                      error('Invalid URL params for propList and/or valueList');
+                  }
+              } else if(key == 'leftPropList') {
+                  lefPropList = value.split(',');
+                  for(i=0; i<savedParams.length; i++) {
+                      if(savedParams[i].indexOf('leftValueList') > -1) {
+                          var values = savedParams[i].split('=');
+                          leftValueList = values.split(',');
+                      }
+                  }
+                  if(lefPropList.length == leftValueList.length) {
+                      for(i=0; i<leftPropList.length; i++) {
+                        if(!paramsLoaded) {
+                          addLeftProp(i);
+                          addLeftValue(i);
+                        }
+                        $($('.prop_selector_left')[i]).val(leftPropList[i]);
+                        $($('.value_selector_left')[i]).val(leftValueList[i]);
+                      }
+                  } else {
+                      error('Invalid URL params for leftPropList and/or leftValueList');
+                  }
+              } else if(key == 'rightPropList') {
+                  righPropList = value.split(',');
+                  for(i=0; i<savedParams.length; i++) {
+                      if(savedParams[i].indexOf('rightValueList') > -1) {
+                          var values = savedParams[i].split('=');
+                          rightValueList = values.split(',');
+                      }
+                  }
+                  if(rightPropList.length == rightValueList.length) {
+                      for(i=0; i<rightPropList.length; i++) {
+                        if(!paramsLoaded) {
+                          addRightProp(i);
+                          addRightValue(i);
+                        }
+                        $($('.prop_selector_right')[i]).val(rightPropList[i]);
+                        $($('.value_selector_right')[i]).val(rightValueList[i]);
+                      }
+                  } else {
+                      error('Invalid URL params for rightPropList and/or rightValueList');
+                  }
+
+              } else if(key = 'type') {
+                  $('#queryType').val(value);
+              } else if(key == 'graph') {
+                  $('#graphType').val(value);
+              } else if(key == 'unit') {
+                  $('#unitType').val(value);
+              }
+          });
+          
+          if(leftEventList.length < 2 || rightEventList.length < 2) { 
+              error('Please select more than one event before proceeding');
+          } else if(leftEventFilterList.length < 1 || rightEventFilterList.length < 1) { 
+              error('Please select at least one prior activity filter before proceeding');
+          } else {
+              paramsLoaded = true;
+              runQuery();
           }
-        }
-        leftEventFilterList = leftFilterEvents;
-        console.log('left event filter list: ' + leftEventFilterList);
 
-        var leftFilterBehaviors = [];
-        for (var i = 0, j = $('.behavior_selector_left').length; i < j; i++) {
-          var behaviorValue = $($('.behavior_selector_left')[i]).val();
-          if (behaviorValue != null) {
-            leftFilterBehaviors.push(behaviorValue);
+        } else { // we are starting this report from scratch
+
+          console.log('No stored params');
+          var leftFilterEvents = [];
+          for (var i = 0, j = $('.event_select_filter_left').length; i < j; i++) {
+            var eventName = $($('.event_select_filter_left')[i]).val();
+            if (eventName != null) {
+              leftFilterEvents.push(eventName);
+            }
           }
-        }
-        leftFilterBehaviorList = leftFilterBehaviors;
-        console.log('left event behavior list: ' + leftFilterBehaviorList);
+          leftEventFilterList = leftFilterEvents;
+          console.log('left event filter list: ' + leftEventFilterList);
 
-        var rightFilterEvents = [];
-        for (var i = 0, j = $('.event_select_filter_right').length; i < j; i++) {
-          var eventName = $($('.event_select_filter_right')[i]).val();
-          if (eventName != null) {
-            rightFilterEvents.push(eventName);
+          var leftFilterBehaviors = [];
+          for (var i = 0, j = $('.behavior_selector_left').length; i < j; i++) {
+            var behaviorValue = $($('.behavior_selector_left')[i]).val();
+            if (behaviorValue != null) {
+              leftFilterBehaviors.push(behaviorValue);
+            }
           }
-        }
-        rightEventFilterList = rightFilterEvents;
-        console.log('right event filter list: ' + rightEventFilterList);
+          leftFilterBehaviorList = leftFilterBehaviors;
+          console.log('left event behavior list: ' + leftFilterBehaviorList);
 
-        var rightFilterBehaviors = [];
-        for (var i = 0, j = $('.behavior_selector_right').length; i < j; i++) {
-          var behaviorValue = $($('.behavior_selector_right')[i]).val();
-          if (behaviorValue != null) {
-            rightFilterBehaviors.push(behaviorValue);
+          var rightFilterEvents = [];
+          for (var i = 0, j = $('.event_select_filter_right').length; i < j; i++) {
+            var eventName = $($('.event_select_filter_right')[i]).val();
+            if (eventName != null) {
+              rightFilterEvents.push(eventName);
+            }
           }
-        }
-        rightFilterBehaviorList = rightFilterBehaviors;
-        console.log('right event behavior list: ' + rightFilterBehaviorList);
+          rightEventFilterList = rightFilterEvents;
+          console.log('right event filter list: ' + rightEventFilterList);
 
-        var leftEvents = [];
-        for (var i = 0, j = $('.event_select_left').length; i < j; i++) {
-          var eventName = $($('.event_select_left')[i]).val();
-          if (eventName != null) {
-            leftEvents.push(eventName);
+          var rightFilterBehaviors = [];
+          for (var i = 0, j = $('.behavior_selector_right').length; i < j; i++) {
+            var behaviorValue = $($('.behavior_selector_right')[i]).val();
+            if (behaviorValue != null) {
+              rightFilterBehaviors.push(behaviorValue);
+            }
           }
-        }
-        leftEventList = leftEvents;
-        console.log('left event list: ' + leftEventList);
+          rightFilterBehaviorList = rightFilterBehaviors;
+          console.log('right event behavior list: ' + rightFilterBehaviorList);
 
-        var rightEvents = [];
-        for (var i = 0, j = $('.event_select_right').length; i < j; i++) {
-          var eventName = $($('.event_select_right')[i]).val();
-          if (eventName != null) {
-            rightEvents.push(eventName);
+          var leftEvents = [];
+          for (var i = 0, j = $('.event_select_left').length; i < j; i++) {
+            var eventName = $($('.event_select_left')[i]).val();
+            if (eventName != null) {
+              leftEvents.push(eventName);
+            }
           }
-        }
-        rightEventList = rightEvents;
-        console.log('right event list: ' + rightEventList);
+          leftEventList = leftEvents;
+          console.log('left event list: ' + leftEventList);
 
-        if(leftEventList.length < 2 || rightEventList.length < 2) { 
-            error('Please select more than one event before proceeding');
-        } else if(leftEventFilterList.length < 1 || rightEventFilterList.length < 1) { 
-            error('Please select at least one prior activity filter before proceeding');
-        } else {
-            var props = [];
-            for (var i = 0, j = $('.prop_selector').length; i < j; i++) {
-                var propName = $($('.prop_selector')[i]).val();
-                if (propName != null) {
-                  props.push(propName);
-                }
+          var rightEvents = [];
+          for (var i = 0, j = $('.event_select_right').length; i < j; i++) {
+            var eventName = $($('.event_select_right')[i]).val();
+            if (eventName != null) {
+              rightEvents.push(eventName);
             }
-            propList = props;
-            console.log('props list: ' + propList);
+          }
+          rightEventList = rightEvents;
+          console.log('right event list: ' + rightEventList);
 
-            var values = [];
-            for (var i = 0, j = $('.value_selector').length; i < j; i++) {
-                var valueName = $($('.value_selector')[i]).val();
-                if (valueName != null) {
-                  values.push(valueName);
-                }
-            }
-            valueList = values;
-            console.log('values list: ' + valueList);
+          if(leftEventList.length < 2 || rightEventList.length < 2) { 
+              error('Please select more than one event before proceeding');
+          } else if(leftEventFilterList.length < 1 || rightEventFilterList.length < 1) { 
+              error('Please select at least one prior activity filter before proceeding');
+          } else {
+              var props = [];
+              for (var i = 0, j = $('.prop_selector').length; i < j; i++) {
+                  var propName = $($('.prop_selector')[i]).val();
+                  if (propName != null) {
+                    props.push(propName);
+                  }
+              }
+              propList = props;
+              console.log('props list: ' + propList);
 
-            var leftProps = [];
-            for (var i = 0, j = $('.prop_selector_left').length; i < j; i++) {
-                var leftPropName = $($('.prop_selector_left')[i]).val();
-                if (leftPropName != null) {
-                    leftProps.push(leftPropName);
-                }
-            }
-            leftPropList = leftProps;
-            console.log('left props list: ' + leftPropList);
+              var values = [];
+              for (var i = 0, j = $('.value_selector').length; i < j; i++) {
+                  var valueName = $($('.value_selector')[i]).val();
+                  if (valueName != null) {
+                    values.push(valueName);
+                  }
+              }
+              valueList = values;
+              console.log('values list: ' + valueList);
 
-            var leftValues = [];
-            for (var i = 0, j = $('.value_selector_left').length; i < j; i++) {
-                var valueLeftName = $($('.value_selector_left')[i]).val();
-                if (valueLeftName != null) {
-                    leftValues.push(valueLeftName);
-                }
-            }
-            leftValueList = leftValues;
-            console.log('left values list: ' + leftValueList);
+              var leftProps = [];
+              for (var i = 0, j = $('.prop_selector_left').length; i < j; i++) {
+                  var leftPropName = $($('.prop_selector_left')[i]).val();
+                  if (leftPropName != null) {
+                      leftProps.push(leftPropName);
+                  }
+              }
+              leftPropList = leftProps;
+              console.log('left props list: ' + leftPropList);
 
-            var rightProps = [];
-            for (var i = 0, j = $('.prop_selector_right').length; i < j; i++) {
-                var rightPropName = $($('.prop_selector_right')[i]).val();
-                if (rightPropName != null) {
-                    rightProps.push(rightPropName);
-                }
-            }
-            rightPropList = rightProps;
-            console.log('right props list: ' + rightPropList);
+              var leftValues = [];
+              for (var i = 0, j = $('.value_selector_left').length; i < j; i++) {
+                  var valueLeftName = $($('.value_selector_left')[i]).val();
+                  if (valueLeftName != null) {
+                      leftValues.push(valueLeftName);
+                  }
+              }
+              leftValueList = leftValues;
+              console.log('left values list: ' + leftValueList);
 
-            var rightValues = [];
-            for (var i = 0, j = $('.value_selector_right').length; i < j; i++) {
-                var valueRightName = $($('.value_selector_right')[i]).val();
-                if (valueRightName != null) {
-                    rightValues.push(valueRightName);
-                }
-            }
-            rightValueList = rightValues;
-            console.log('right values list: ' + rightValueList);
+              var rightProps = [];
+              for (var i = 0, j = $('.prop_selector_right').length; i < j; i++) {
+                  var rightPropName = $($('.prop_selector_right')[i]).val();
+                  if (rightPropName != null) {
+                      rightProps.push(rightPropName);
+                  }
+              }
+              rightPropList = rightProps;
+              console.log('right props list: ' + rightPropList);
 
-            runQuery();
+              var rightValues = [];
+              for (var i = 0, j = $('.value_selector_right').length; i < j; i++) {
+                  var valueRightName = $($('.value_selector_right')[i]).val();
+                  if (valueRightName != null) {
+                      rightValues.push(valueRightName);
+                  }
+              }
+              rightValueList = rightValues;
+              console.log('right values list: ' + rightValueList);
+
+              runQuery();
+          }
         }        
       });
 
@@ -1273,10 +1291,12 @@
               var keys = Object.keys(leftResults[0]);
               var leftData = {};
               var leftBarData = {};
+              leftExportData = [];
               leftData['Conversion Rate'] = {};
               for(i=0; i<keys.length; i++) {
                 if(!isNaN(keys[i].charAt(0))) {
                   leftData['Conversion Rate'][keys[i]] = leftResults[0][keys[i]] / uniquesLeft[keys[i]] * 100;
+                  leftExportData.push({'Date': keys[i], 'Active Users': uniquesLeft[keys[i]], 'Converted Users': leftResults[0][keys[i]], 'Conversion Rate': leftResults[0][keys[i]] / uniquesLeft[keys[i]] * 100});
                 }
               }
               for(i=0; i<keys.length; i++) {
@@ -1297,18 +1317,19 @@
               }
               console.log(leftData);
               console.log(leftBarData);
-              lastLeftData = leftData;
-              lastLeftBarData = leftBarData;
+              console.log(leftExportData);
               
               // right funnel data
               MP.api.jql(script, rightParams).done(function(rightResults) {
                 var keys = Object.keys(rightResults[0]);
                 var rightData = {};
                 var rightBarData = {};
+                rightExportData = [];
                 rightData['Conversion Rate'] = {};
                 for(i=0; i<keys.length; i++) {
                   if(!isNaN(keys[i].charAt(0))) {
                     rightData['Conversion Rate'][keys[i]] = rightResults[0][keys[i]] / uniquesRight[keys[i]] * 100;
+                    rightExportData.push({'Date': keys[i], 'Active Users': uniquesRight[keys[i]], 'Converted Users': rightResults[0][keys[i]], 'Conversion Rate': rightResults[0][keys[i]] / uniquesRight[keys[i]] * 100});
                   }
                 }
                 for(i=0; i<keys.length; i++) {
@@ -1331,8 +1352,7 @@
                 }
                 console.log(rightData);
                 console.log(rightBarData);
-                lastRightData = rightData;
-                lastRightBarData = rightBarData;
+                console.log(rightExportData);
 
                 // comparison table
                 $('#table').append('<table>');
@@ -1404,11 +1424,65 @@
         //make the queries not absolutely depend on one another (this is slow in UI)
       }
 
-      /*$("#export").click(function (event) {
-        var json_to_csv = new json2csv();
-        var csv = "data:text/csv;charset=utf-8," + json_to_csv.jsonToCSV(lastLeftBarData);
-        $(this).attr("href", encodeURI(csv)).attr("download", "Funnel-Export.csv");
-      });*/
+      // export results
+      $("#export").click(function (event) {
+        downloadCSV({ filename: "funnel-data-left.csv", data: leftExportData });
+        downloadCSV({ filename: "funnel-data-right.csv", data: rightExportData });
+      });
+
+      function convertArrayOfObjectsToCSV(args) {
+        var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+
+        data = args.data || null;
+        if (data == null || !data.length) {
+          return null;
+        }
+
+        columnDelimiter = args.columnDelimiter || ',';
+        lineDelimiter = args.lineDelimiter || '\n';
+
+        keys = Object.keys(data[0]);
+
+        result = '';
+        result += keys.join(columnDelimiter);
+        result += lineDelimiter;
+
+        data.forEach(function(item) {
+          ctr = 0;
+          keys.forEach(function(key) {
+            if (ctr > 0) result += columnDelimiter;
+
+            result += item[key];
+            ctr++;
+          });
+          result += lineDelimiter;
+        });
+
+        return result;
+      }
+
+      function downloadCSV(args) {
+        var data, filename, link;
+
+        data = args.data || leftExportData;
+
+        var csv = convertArrayOfObjectsToCSV({
+          data: data
+        });
+        if (csv == null) return;
+
+        filename = args.filename || 'export.csv';
+
+        if (!csv.match(/^data:text\/csv/i)) {
+          csv = 'data:text/csv;charset=utf-8,' + csv;
+        }
+        data = encodeURI(csv);
+
+        link = document.createElement('a');
+        link.setAttribute('href', data);
+        link.setAttribute('download', filename);
+        link.click();
+      }
     </script>
 
     <script id='jql-count'>
