@@ -365,6 +365,8 @@
       var priorLeftValues = {};
       var priorRightValues = {};
       var paramsLoaded = false;
+      var globalEventsOptions = { items: [] };
+      var globalPropsOptions = { items: [] };
       var $leftEventsFilter = $('#leftEventsFilter');
       var $leftAddFilter = $('#leftEventsFilter').find('#leftAddFilter');
       var $rightEventsFilter = $('#rightEventsFilter');
@@ -412,11 +414,35 @@
 
       MP.api.setCredentials('7a66766fb54b8f77ba03ada28b0bfb1f')
 
-      function addLeftEventFilter(i) {
+      MP.api.topEvents().done(function(results) {
+        console.log(results.values())
+        _.each(results.values(), function(item) {
+          globalEventsOptions.items.push({label: item, value: item});
+        });
+      });
+
+      MP.api.topProperties().done(function(results) {
+        console.log(results.values())
+        var props = Object.keys(results.values()).sort()
+        _.each(props, function(item) {
+          globalPropsOptions.items.push({label: item, value: item});
+        });
+      });
+
+      function addLeftEventFilter(i, priorEvent) {
         if (i > 0) {
           $('<div class="events_label left_filter" id="' + i + '"> AND </div>').insertBefore($leftAddFilter);
         }
-        var eventSelectFilter = $('<div class="event_select_filter_left inline block" id="' + i + '"></div>').insertBefore($leftAddFilter).MPEventSelect();
+
+        var localOptions = globalEventsOptions;
+        if(priorEvent) {
+          var index = localOptions.items.indexOf(priorEvent);
+          delete localOptions.items[index];
+          localOptions.items.unshift({label: priorEvent, value: priorEvent});
+        }
+
+        var eventSelectFilter = $('<div class="event_select_filter_left inline block" id="' + i + '"></div>').insertBefore($leftAddFilter).MPSelect(localOptions);
+
         $('<div class="right-arrow left_filter_events" id="' + i + '"></div>').insertBefore($leftAddFilter);
 
         var options = {};
@@ -427,11 +453,20 @@
         var filterSelect = $('<div class="behavior_select inline block behavior_selector_left" id="' + i + '"></div>').insertBefore($leftAddFilter).MPSelect(options);
       }
 
-      function addRightEventFilter(i) {
+      function addRightEventFilter(i, priorEvent) {
         if (i > 0) {
           $('<div class="events_label right_filter" id="' + i + '"> AND </div>').insertBefore($rightAddFilter);
         }
-        var eventSelectFilter = $('<div class="event_select_filter_right inline block" id="' + i + '"></div>').insertBefore($rightAddFilter).MPEventSelect();
+
+        var localOptions = globalEventsOptions;
+        if(priorEvent) {
+          var index = localOptions.items.indexOf(priorEvent);
+          delete localOptions.items[index];
+          localOptions.items.unshift({label: priorEvent, value: priorEvent});
+        }
+
+        var eventSelectFilter = $('<div class="event_select_filter_right inline block" id="' + i + '"></div>').insertBefore($rightAddFilter).MPSelect(localOptions);
+
         $('<div class="right-arrow right_filter_events" id="' + i + '"></div>').insertBefore($rightAddFilter);
 
         var options = {};
@@ -442,27 +477,49 @@
         var filterSelect = $('<div class="behavior_select inline block behavior_selector_right" id="' + i + '"></div>').insertBefore($rightAddFilter).MPSelect(options);
       }
 
-      function addLeftEvent(i) {
+      function addLeftEvent(i, priorEvent) {
         if (i > 0) {
           $('<div class="right-arrow left_events" id="' + i + '"></div>').insertBefore($leftAdd);
         }
-        var eventSelect = $('<div class="event_select_left inline block" id="' + i + '"></div>').insertBefore($leftAdd).MPEventSelect();
+
+        var localOptions = globalEventsOptions;
+        if(priorEvent) {
+          var index = localOptions.items.indexOf(priorEvent);
+          delete localOptions.items[index];
+          localOptions.items.unshift({label: priorEvent, value: priorEvent});
+        }
+
+        var eventSelect = $('<div class="event_select_left inline block" id="' + i + '"></div>').insertBefore($leftAdd).MPSelect(localOptions);
       }
 
-      function addRightEvent(i) {
+      function addRightEvent(i, priorEvent) {
         if (i > 0) {
           $('<div class="right-arrow right_events" id="' + i + '"></div>').insertBefore($rightAdd);
         }
-        var eventSelect = $('<div class="event_select_right inline block" id="' + i + '"></div>').insertBefore($rightAdd).MPEventSelect();
+
+        var localOptions = globalEventsOptions;
+        if(priorEvent) {
+          var index = localOptions.items.indexOf(priorEvent);
+          delete localOptions.items[index];
+          localOptions.items.unshift({label: priorEvent, value: priorEvent});
+        }
+        
+        var eventSelect = $('<div class="event_select_right inline block" id="' + i + '"></div>').insertBefore($rightAdd).MPSelect(localOptions);
       }
 
-      function addProp(i) {
+      function addProp(i, priorProp) {
         if (i > 0){
           var valueBuffer = $('<div class="events_label global_filter" id="' + i + '"> AND </div>').insertBefore($addProps);
         }
 
-        var propSelect = $('<div class="prop_select inline block prop_selector" id="' + i + '"></div>').insertBefore($addProps).MPPropertySelect();
-        propSelect.MPPropertySelect('setEvent', leftEventList[i]);
+        var localOptions = globalPropsOptions;
+        if(priorProp) {
+          var index = localOptions.items.indexOf(priorProp);
+          delete localOptions.items[index];
+          localOptions.items.unshift({label: priorProp, value: priorProp});
+        }
+
+        var propSelect = $('<div class="prop_select inline block prop_selector" id="' + i + '"></div>').insertBefore($addProps).MPSelect(localOptions);
 
         propSelect.on('change', function(e, prop) {
             if(priorValues[i]) { // if we already have a property
@@ -496,27 +553,38 @@
         });
       }
 
-      function addValue(i) {
+      function addValue(i, priorValue) {
         $('<div class="right-arrow props_global" id="' + i + '"></div>').insertBefore($addProps);
 
         MP.api.propertyValues(leftEventList[i], propList[i]).done(function(results) {
           var options = {};
           options.items = [];
+          if(priorValue) {
+            options.items.push({label: priorValue, value: priorValue});
+          }
           _.each(results.values(), function(item) {
-            options.items.push({label: item, value: item});
+            if(item !== priorValue) {
+              options.items.push({label: item, value: item});
+            }
           });
 
           var valueSelect = $('<div class="prop_select inline block value_selector" id="' + i + '"></div>').insertBefore($addProps).MPSelect(options);
         });
       }
 
-      function addLeftProp(i) {
+      function addLeftProp(i, priorProp) {
         if (i > 0){
           var valueLeftBuffer = $('<div class="events_label global_filter_left" id="' + i + '"> AND </div>').insertBefore($addLeftProps);
         }
 
-        propLeftSelect = $('<div class="prop_select inline block prop_selector_left" id="' + i + '"></div>').insertBefore($addLeftProps).MPPropertySelect();
-        propLeftSelect.MPPropertySelect('setEvent', leftEventList[leftEventList.length-1]);
+        var localOptions = globalPropsOptions;
+        if(priorProp) {
+          var index = localOptions.items.indexOf(priorProp);
+          delete localOptions.items[index];
+          localOptions.items.unshift({label: priorProp, value: priorProp});
+        }
+
+        propLeftSelect = $('<div class="prop_select inline block prop_selector_left" id="' + i + '"></div>').insertBefore($addLeftProps).MPSelect(localOptions);
 
         propLeftSelect.on('change', function(e, prop) {
             if(priorLeftValues[i]) { // if we already have a property
@@ -550,27 +618,38 @@
         });
       }
 
-      function addLeftValue(i) {
+      function addLeftValue(i, priorValue) {
         $('<div class="right-arrow props_left" id="' + i + '"></div>').insertBefore($addLeftProps);
 
         MP.api.propertyValues(leftEventList[leftEventList.length-1], leftPropList[i]).done(function(results) {
           var options = {};
           options.items = [];
+          if(priorValue) {
+            options.items.push({label: priorValue, value: priorValue});
+          }
           _.each(results.values(), function(item) {
-            options.items.push({label: item, value: item});
+            if(item !== priorValue) {
+              options.items.push({label: item, value: item});
+            }
           });
 
           var valueLeftSelect = $('<div class="prop_select inline block value_selector_left" id="' + i + '"></div>').insertBefore($addLeftProps).MPSelect(options);
         });
       }
 
-      function addRightProp(i) {
+      function addRightProp(i, priorProp) {
         if (i > 0){
           var valueRightBuffer = $('<div class="events_label global_filter_right" id="' + i + '"> AND </div>').insertBefore($addRightProps);
         }
 
-        var propRightSelect = $('<div class="prop_select inline block prop_selector_right" id="' + i + '"></div>').insertBefore($addRightProps).MPPropertySelect();
-        propRightSelect.MPPropertySelect('setEvent', rightEventList[rightEventList.length-1]);
+        var localOptions = globalPropsOptions;
+        if(priorProp) {
+          var index = localOptions.items.indexOf(priorProp);
+          delete localOptions.items[index];
+          localOptions.items.unshift({label: priorProp, value: priorProp});
+        }
+
+        var propRightSelect = $('<div class="prop_select inline block prop_selector_right" id="' + i + '"></div>').insertBefore($addRightProps).MPSelect(localOptions);
 
         propRightSelect.on('change', function(e, prop) {
             if(priorRightValues[i]) { // if we already have a property
@@ -604,14 +683,19 @@
         });
       }
 
-      function addRightValue(i) {
+      function addRightValue(i, priorValue) {
         $('<div class="right-arrow props_right" id="' + i + '"></div>').insertBefore($addRightProps);
 
         MP.api.propertyValues(rightEventList[rightEventList.length-1], rightPropList[i]).done(function(results) {
           var options = {};
           options.items = [];
+          if(priorValue) {
+            options.items.push({label: priorValue, value: priorValue});
+          }
           _.each(results.values(), function(item) {
-            options.items.push({label: item, value: item});
+            if(item !== priorValue) {
+              options.items.push({label: item, value: item});
+            }
           });
 
           var valueRightSelect = $('<div class="prop_select inline block value_selector_right" id="' + i + '"></div>').insertBefore($addRightProps).MPSelect(options);
@@ -858,118 +942,156 @@
 
           _.each(allParams, function(param) {
               var keyValue = param.split('=');
-              console.log(keyValue);
               var key = keyValue[0];
-              var value = keyValue[1];
+              var value = decodeURI(keyValue[1]);
               if(key == 'leftEventFilterList') {
                   leftEventFilterList = value.split(',');
                   for(i=0; i<leftEventFilterList.length; i++) {
                     if(!paramsLoaded) {
-                      addLeftEventFilter(i);
+                      addLeftEventFilter(i, leftEventFilterList[i]);
                     }
-                    $($('.event_select_filter_left')[i]).val([leftEventFilterList[i]]);
                   }
               } else if(key == 'leftEventBehaviorList') {
                   leftFilterBehaviorList = value.split(',');
                   for(i=0; i<leftFilterBehaviorList.length; i++) {
-                    $($('.behavior_selector_left')[i]).val([leftFilterBehaviorList[i]]);
+                    if(!leftFilterBehaviorList[i]) {
+                      var options = {};
+                      options.items = [];
+                      options.items.push({label: 'Was Not Performed', value: 'false'});
+                      options.items.push({label: 'Was Performed', value: 'true'});
+                      $($('.behavior_selector_left')[i]).MPSelect('initEl', options);
+                    }
                   }
               } else if(key == 'rightEventFilterList') {
                   rightEventFilterList = value.split(',');
                   for(i=0; i<rightEventFilterList.length; i++) {
                     if(!paramsLoaded) {
-                      addRightEventFilter(i);
+                      addRightEventFilter(i, rightEventFilterList[i]);
                     }
-                    $($('.event_select_filter_right')[i]).val([rightEventFilterList[i]]);
                   }
               } else if(key == 'rightEventBehaviorList') {
                   rightFilterBehaviorList = value.split(',');
                   for(i=0; i<rightFilterBehaviorList.length; i++) {
-                    $($('.behavior_selector_right')[i]).val([rightFilterBehaviorList[i]]);
+                    if(!rightFilterBehaviorList[i]) {
+                      var options = {};
+                      options.items = [];
+                      options.items.push({label: 'Was Not Performed', value: 'false'});
+                      options.items.push({label: 'Was Performed', value: 'true'});
+                      $($('.behavior_selector_right')[i]).MPSelect('initEl', options);
+                    }
                   }
               } else if(key == 'leftEventList') {
                   leftEventList = value.split(',');
                   for(i=0; i<leftEventList.length; i++) {
                     if(!paramsLoaded) {
-                      addLeftEvent(i);
+                      addLeftEvent(i, leftEventList[i]);
                     }
-                    $($('.event_select_left')[i]).val([leftEventList[i]]);
                   }
               } else if(key == 'rightEventList') {
                   rightEventList = value.split(',');
                   for(i=0; i<rightEventList.length; i++) {
                     if(!paramsLoaded) {
-                      addRightEvent(i);
+                      addRightEvent(i, rightEventList[i]);
                     }
-                    $($('.event_select_right')[i]).val([rightEventList[i]]);
                   }
-              } else if(key == 'propList') {
-                  propList = value.split(',');
-                  for(i=0; i<savedParams.length; i++) {
-                      if(savedParams[i].indexOf('valueList') > -1) {
-                          var values = savedParams[i].split('=');
-                          valueList = values.split(',');
-                      }
+              } else if(key == 'propsValueList') {
+                  propsValueList = value.split(',');
+                  for(i=0; i<propsValueList.length; i++) {
+                      propList.push(propsValueList[i].split(':')[0])
+                      valueList.push(propsValueList[i].split(':')[1])
                   }
                   if(propList.length == valueList.length) {
                       for(i=0; i<propList.length; i++) {
-                        if(!paramsLoaded) {
-                          addProp(i);
-                          addValue(i);
-                        }
-                        $($('.prop_selector')[i]).val(propList[i]);
-                        $($('.value_selector')[i]).val(valueList[i]);
+                          if(!paramsLoaded) {
+                              addProp(i, propList[i]);
+                              addValue(i, valueList[i]);
+                          }
                       }
                   } else {
                       error('Invalid URL params for propList and/or valueList');
                   }
-              } else if(key == 'leftPropList') {
-                  lefPropList = value.split(',');
-                  for(i=0; i<savedParams.length; i++) {
-                      if(savedParams[i].indexOf('leftValueList') > -1) {
-                          var values = savedParams[i].split('=');
-                          leftValueList = values.split(',');
-                      }
+              } else if(key == 'leftPropsValueList') {
+                  leftPropsValueList = value.split(',');
+                  for(i=0; i<leftPropsValueList.length; i++) {
+                      leftPropList.push(leftPropsValueList[i].split(':')[0])
+                      leftValueList.push(leftPropsValueList[i].split(':')[1])
                   }
-                  if(lefPropList.length == leftValueList.length) {
+                  if(leftPropList.length == leftValueList.length) {
                       for(i=0; i<leftPropList.length; i++) {
-                        if(!paramsLoaded) {
-                          addLeftProp(i);
-                          addLeftValue(i);
-                        }
-                        $($('.prop_selector_left')[i]).val(leftPropList[i]);
-                        $($('.value_selector_left')[i]).val(leftValueList[i]);
+                          if(!paramsLoaded) {
+                              addLeftProp(i, leftPropList[i]);
+                              addLeftValue(i, leftValueList[i]);
+                          }
                       }
                   } else {
-                      error('Invalid URL params for leftPropList and/or leftValueList');
+                      error('Invalid URL params for propList and/or valueList');
                   }
-              } else if(key == 'rightPropList') {
-                  righPropList = value.split(',');
-                  for(i=0; i<savedParams.length; i++) {
-                      if(savedParams[i].indexOf('rightValueList') > -1) {
-                          var values = savedParams[i].split('=');
-                          rightValueList = values.split(',');
-                      }
+              } else if(key == 'rightPropsValueList') {
+                  rightPropsValueList = value.split(',');
+                  for(i=0; i<rightPropsValueList.length; i++) {
+                      rightPropList.push(rightPropsValueList[i].split(':')[0])
+                      rightValueList.push(rightPropsValueList[i].split(':')[1])
                   }
                   if(rightPropList.length == rightValueList.length) {
                       for(i=0; i<rightPropList.length; i++) {
-                        if(!paramsLoaded) {
-                          addRightProp(i);
-                          addRightValue(i);
-                        }
-                        $($('.prop_selector_right')[i]).val(rightPropList[i]);
-                        $($('.value_selector_right')[i]).val(rightValueList[i]);
+                          if(!paramsLoaded) {
+                              addRightProp(i, rightPropList[i]);
+                              addRightValue(i, rightValueList[i]);
+                          }
                       }
                   } else {
-                      error('Invalid URL params for rightPropList and/or rightValueList');
+                      error('Invalid URL params for propList and/or valueList');
                   }
+              } else if(key == 'type') {
+                  if(value == 'total') {
+                    var toggle = $('#chart-type-toggle');
+                    chartTypeState = 'right';
+                    chartTypeVal = chartTypeRight;
 
-              } else if(key = 'type') {
-                  $('#queryType').val(value);
+                    toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-text-selected');
+                    toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-text-selected');
+
+                    toggle.find($('.rounded-toggle-circle')).removeClass('rounded-toggle-circle-left');
+                    toggle.find($('.rounded-toggle-circle')).addClass('rounded-toggle-circle-right');
+
+                    toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-circle-left-selected');
+                    toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-circle-right-selected');
+                  }
               } else if(key == 'graph') {
-                  $('#graphType').val(value);
+                  if(value == 'line') {
+                    var toggle = $('#chart-count-toggle');
+                    chartCountState = 'right';
+                    chartCountVal = chartCountRight;
+
+                    toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-text-selected');
+                    toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-text-selected');
+
+                    toggle.find($('.rounded-toggle-circle')).removeClass('rounded-toggle-circle-left');
+                    toggle.find($('.rounded-toggle-circle')).addClass('rounded-toggle-circle-right');
+
+                    toggle.find($('.rounded-toggle-text-left')).removeClass('rounded-toggle-circle-left-selected');
+                    toggle.find($('.rounded-toggle-text-right')).addClass('rounded-toggle-circle-right-selected');
+                  }
               } else if(key == 'unit') {
-                  $('#unitType').val(value);
+                if(value == 'week') {
+                  var unitOptions = {
+                    items: [
+                      {label: 'Week', value: 'week'},
+                      {label: 'Day', value: 'day'},
+                      {label: 'Month', value: 'month'},
+                    ]
+                  };
+                  $('#unitType').MPSelect('initEl', unitOptions);
+                } else if (value == 'month') {
+                  var unitOptions = {
+                    items: [
+                      {label: 'Month', value: 'month'},
+                      {label: 'Day', value: 'day'},
+                      {label: 'Week', value: 'week'},
+                    ]
+                  };
+                  $('#unitType').MPSelect('initEl', unitOptions);
+                }
               }
           });
           
@@ -977,6 +1099,8 @@
               error('Please select more than one event before proceeding');
           } else if(leftEventFilterList.length < 1 || rightEventFilterList.length < 1) { 
               error('Please select at least one prior activity filter before proceeding');
+          } else if(propList.length !== valueList.length || leftPropList.length !== leftValueList.length || rightPropList.length !== rightValueList.length) {
+              error('Please correct property assignment error before proceeding');
           } else {
               paramsLoaded = true;
               runQuery();
