@@ -67,7 +67,7 @@
       #removeProps:hover, #removeLeftProps:hover, #removeRightProps:hover {
         background-position: 0px 18px;
       }
-      #run, #annotationRun, #export {
+      #run, #annotationRun, #export, #generates {
         clear:both;
         vertical-align: 1px;
         text-align: center;
@@ -84,7 +84,6 @@
         cursor: pointer;
         font-weight: bold;
         max-width: 50px;
-        display: inline-block;
       }
       .alert {
         display: none;
@@ -122,6 +121,12 @@
         background-color: #dedede;
         border-radius: 3px;
         transition: all 0.2s;
+      }
+      #input {
+        width: 75%;
+      }
+      .buttons {
+        display: flex;
       }
     </style>
     <div class="mixpanel-platform-section">
@@ -190,6 +195,11 @@
           <div id="removeProps"></div>
         </div>
 
+        <div class="global-prop-filters" id="props">
+          <div class="events_label">Saved Report Params (Optional):</div>
+          <input type="text" id="input"></input>
+        </div>
+
         <div class="input-toggles">
           <!-- Toggle for chart count (total/unique) -->
           <div>
@@ -232,10 +242,11 @@
 
         </div>
         -->
-
-        <div id="run">RUN</div>
-        <div id="export">EXPORT</div>
-        <div id="saved"><input type="text" id="input"></input></div>
+        <div class="buttons">
+          <div id="run">RUN</div>
+          <div id="generate">GENERATE</div>
+          <div id="export">EXPORT</div>
+        </div>
       </div>
       
 
@@ -353,6 +364,8 @@
       var rightEventFilterList = [];
       var leftFilterBehaviorList = [];
       var rightFilterBehaviorList = [];
+      var leftFilterDateList = [];
+      var rightFilterDateList = [];
       var leftEventList = [];
       var rightEventList = [];
       var propList = [];
@@ -451,6 +464,12 @@
         options.items.push({label: 'Was Not Performed', value: 'false'});
 
         var filterSelect = $('<div class="behavior_select inline block behavior_selector_left" id="' + i + '"></div>').insertBefore($leftAddFilter).MPSelect(options);
+
+        $('<div class="events_label left_behavior_filter_between" id="' + i + '"> BETWEEN </div>').insertBefore($leftAddFilter);
+        var fromBehaviorSelect = $('<input class="behavior_select inline block behavior_selector_from_left" id="' + i + '"></input>').insertBefore($leftAddFilter);
+        $('<div class="events_label left_behavior_filter_and" id="' + i + '"> AND </div>').insertBefore($leftAddFilter);
+        var fromBehaviorSelect = $('<input class="behavior_select inline block behavior_selector_to_left" id="' + i + '"></input>').insertBefore($leftAddFilter);
+        $('<div class="events_label left_behavior_filter_daysago" id="' + i + '"> DAYS AGO </div>').insertBefore($leftAddFilter);
       }
 
       function addRightEventFilter(i, priorEvent) {
@@ -475,6 +494,12 @@
         options.items.push({label: 'Was Not Performed', value: 'false'});
 
         var filterSelect = $('<div class="behavior_select inline block behavior_selector_right" id="' + i + '"></div>').insertBefore($rightAddFilter).MPSelect(options);
+
+        $('<div class="events_label right_behavior_filter_between" id="' + i + '"> BETWEEN </div>').insertBefore($rightAddFilter);
+        var fromBehaviorSelect = $('<input class="behavior_select inline block behavior_selector_from_right" id="' + i + '"></input>').insertBefore($rightAddFilter);
+        $('<div class="events_label right_behavior_filter_and" id="' + i + '"> AND </div>').insertBefore($rightAddFilter);
+        var fromBehaviorSelect = $('<input class="behavior_select inline block behavior_selector_to_right" id="' + i + '"></input>').insertBefore($rightAddFilter);
+        $('<div class="events_label right_behavior_filter_daysago" id="' + i + '"> DAYS AGO </div>').insertBefore($rightAddFilter);
       }
 
       function addLeftEvent(i, priorEvent) {
@@ -886,6 +911,11 @@
         $($('.event_select_filter_left')[numEvents-1]).remove();
         $($('.behavior_selector_left')[numEvents-1]).remove();
         $($('.left_filter_events')[numEvents-1]).remove();
+        $($('.left_behavior_filter_between')[numEvents-1]).remove();
+        $($('.left_behavior_filter_and')[numEvents-1]).remove();
+        $($('.left_behavior_filter_daysago')[numEvents-1]).remove();
+        $($('.behavior_selector_to_left')[numEvents-1]).remove();
+        $($('.behavior_selector_from_left')[numEvents-1]).remove();
         $($('.left_filter')[numEvents-2]).remove();
       });
 
@@ -894,6 +924,11 @@
         $($('.event_select_filter_right')[numEvents-1]).remove();
         $($('.behavior_selector_right')[numEvents-1]).remove();
         $($('.right_filter_events')[numEvents-1]).remove();
+        $($('.right_behavior_filter_between')[numEvents-1]).remove();
+        $($('.right_behavior_filter_and')[numEvents-1]).remove();
+        $($('.right_behavior_filter_daysago')[numEvents-1]).remove();
+        $($('.behavior_selector_to_right')[numEvents-1]).remove();
+        $($('.behavior_selector_from_right')[numEvents-1]).remove();
         $($('.right_filter')[numEvents-2]).remove();
       });
 
@@ -934,7 +969,7 @@
       $('#run').on('click', function() {
 
         var savedParams = document.getElementById("input");
-        if (savedParams && savedParams.value) { // we have saved parameters
+        if (savedParams && savedParams.value && !paramsLoaded) { // we have saved parameters
           
           console.log('Found stored params');
           console.log(savedParams.value);
@@ -962,6 +997,12 @@
                       $($('.behavior_selector_left')[i]).MPSelect('initEl', options);
                     }
                   }
+              } else if(key == 'leftFilterDateList') {
+                  leftFilterDateList = value.split(',');
+                  for(i=0; i<leftFilterDateList.length/2; i++) {
+                    $($('.behavior_selector_from_left')[i]).val(leftFilterDateList[i*2]);
+                    $($('.behavior_selector_to_left')[i]).val(leftFilterDateList[i*2+1]);
+                  }
               } else if(key == 'rightEventFilterList') {
                   rightEventFilterList = value.split(',');
                   for(i=0; i<rightEventFilterList.length; i++) {
@@ -979,6 +1020,12 @@
                       options.items.push({label: 'Was Performed', value: 'true'});
                       $($('.behavior_selector_right')[i]).MPSelect('initEl', options);
                     }
+                  }
+              } else if(key == 'rightFilterDateList') {
+                  rightFilterDateList = value.split(',');
+                  for(i=0; i<rightFilterDateList.length/2; i++) {
+                    $($('.behavior_selector_from_right')[i]).val(rightFilterDateList[i*2]);
+                    $($('.behavior_selector_to_right')[i]).val(rightFilterDateList[i*2+1]);
                   }
               } else if(key == 'leftEventList') {
                   leftEventList = value.split(',');
@@ -1092,6 +1139,20 @@
                   };
                   $('#unitType').MPSelect('initEl', unitOptions);
                 }
+              } else if(key == 'leftDate') {
+                var dateSelect = $('#leftDates').MPDatepicker();
+                fromDate = new Date();
+                dateSelectTime = dateSelect.val();
+                fromDate.setDate(dateSelectTime.to.getDate() - value);
+                dateSelectTime.from = fromDate;
+                dateSelect.val(dateSelectTime);
+              } else if(key == 'rightDate') {
+                var dateSelect = $('#rightDates').MPDatepicker();
+                fromDate = new Date();
+                dateSelectTime = dateSelect.val();
+                fromDate.setDate(dateSelectTime.to.getDate() - value);
+                dateSelectTime.from = fromDate;
+                dateSelect.val(dateSelectTime);
               }
           });
           
@@ -1129,6 +1190,27 @@
           leftFilterBehaviorList = leftFilterBehaviors;
           console.log('left event behavior list: ' + leftFilterBehaviorList);
 
+          var leftFilterDates = [];
+          var validLeftDates = true;
+          for (var i = 0, j = $('.behavior_selector_from_left').length; i < j; i++) {
+            var dateValue = $($('.behavior_selector_from_left')[i]).val();
+            if (dateValue != '') {
+              leftFilterDates.push(dateValue);
+            }
+            if(dateValue > Math.floor((new Date().getTime() - $('#leftDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#leftDates').val().to)/(60*60*24*1000))) {
+              validLeftDates = false;
+            }
+            var dateValue = $($('.behavior_selector_to_left')[i]).val();
+            if (dateValue != '') {
+              leftFilterDates.push(dateValue);
+            }
+            if(dateValue > Math.floor((new Date().getTime() - $('#leftDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#leftDates').val().to)/(60*60*24*1000))) {
+              validLeftDates = false;
+            }
+          }
+          leftFilterDateList = leftFilterDates;
+          console.log('left event behavior date list: ' + leftFilterDateList);
+
           var rightFilterEvents = [];
           for (var i = 0, j = $('.event_select_filter_right').length; i < j; i++) {
             var eventName = $($('.event_select_filter_right')[i]).val();
@@ -1148,6 +1230,27 @@
           }
           rightFilterBehaviorList = rightFilterBehaviors;
           console.log('right event behavior list: ' + rightFilterBehaviorList);
+
+          var rightFilterDates = [];
+          var validRightDates = true;
+          for (var i = 0, j = $('.behavior_selector_from_right').length; i < j; i++) {
+            var dateValue = $($('.behavior_selector_from_right')[i]).val();
+            if (dateValue != '') {
+              rightFilterDates.push(dateValue);
+            }
+            if(dateValue > Math.floor((new Date().getTime() - $('#rightDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#rightDates').val().to)/(60*60*24*1000))) {
+              validRightDates = false;
+            }
+            var dateValue = $($('.behavior_selector_to_right')[i]).val();
+            if (dateValue != '') {
+              rightFilterDates.push(dateValue);
+            }
+            if(dateValue > Math.floor((new Date().getTime() - $('#rightDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#rightDates').val().to)/(60*60*24*1000))) {
+              validRightDates = false;
+            }
+          }
+          rightFilterDateList = rightFilterDates;
+          console.log('right event behavior date list: ' + rightFilterDateList);
 
           var leftEvents = [];
           for (var i = 0, j = $('.event_select_left').length; i < j; i++) {
@@ -1173,6 +1276,10 @@
               error('Please select more than one event before proceeding');
           } else if(leftEventFilterList.length < 1 || rightEventFilterList.length < 1) { 
               error('Please select at least one prior activity filter before proceeding');
+          } else if(leftFilterDateList.length !== $('.behavior_selector_from_left').length + $('.behavior_selector_to_left').length || rightFilterDateList.length !== $('.behavior_selector_from_right').length + $('.behavior_selector_to_right').length) {
+              error('Please add dates to prior behavior filter before proceeding');
+          } else if(!validLeftDates || !validRightDates) {
+              error('Please correct prior behavior filters to be a subset of the date range');
           } else {
               var props = [];
               for (var i = 0, j = $('.prop_selector').length; i < j; i++) {
@@ -1331,6 +1438,7 @@
           selector: totalLeftEvents,
           behaviors: leftEventFilterList,
           behaviors_values: leftFilterBehaviorList,
+          behaviors_dates: leftFilterDateList,
           type: chartCountVal, // was formerly dropdown with $('#queryType').val()
           graph: chartTypeVal, // was formerly dropdown with $('#graphType').val()
           unit: $('#unitType').val(),
@@ -1366,6 +1474,7 @@
           selector: totalRightEvents,
           behaviors: rightEventFilterList,
           behaviors_values: rightFilterBehaviorList,
+          behaviors_dates: rightFilterDateList,
           type: chartCountVal, // was formerly dropdown with $('#queryType').val()
           graph: chartTypeVal, // was formerly dropdown with $('#graphType').val()
           unit: $('#unitType').val(),
@@ -1412,6 +1521,7 @@
 
             // left funnel data
             MP.api.jql(script, leftParams).done(function(leftResults) {
+              console.log(leftResults);
               var keys = Object.keys(leftResults[0]);
               var leftData = {};
               var leftBarData = {};
@@ -1547,6 +1657,61 @@
         //to do
         //make the queries not absolutely depend on one another (this is slow in UI)
       }
+
+      // generate a URL for the given query
+      $("#generate").click(function (event) {
+        var reportParam = '';
+        if(leftEventFilterList.length > 0) {
+          reportParam += 'leftEventFilterList=' + leftEventFilterList.toString() + '&';
+        }
+        if(leftFilterBehaviorList.length > 0) {
+          reportParam += 'leftFilterBehaviorList=' + leftFilterBehaviorList.toString() + '&';
+        }
+        if(leftFilterDateList.length > 0) {
+          reportParam += 'leftFilterDateList=' + leftFilterDateList.toString() + '&';
+        }
+        if(rightEventFilterList.length > 0) {
+          reportParam += 'rightEventFilterList=' + rightEventFilterList.toString() + '&';
+        }
+        if(rightFilterBehaviorList.length > 0) {
+          reportParam += 'rightFilterBehaviorList=' + rightFilterBehaviorList.toString() + '&';
+        }
+        if(rightFilterDateList.length > 0) {
+          reportParam += 'rightFilterDateList=' + rightFilterDateList.toString() + '&';
+        }
+        if(leftEventList.length > 1) {
+          reportParam += 'leftEventList=' + leftEventList.toString() + '&';
+        }
+        if(rightEventList.length > 1) {
+          reportParam += 'rightEventList=' + rightEventList.toString() + '&';
+        }
+        if(propList.length > 0) {
+          reportParam += 'propsValueList=';
+          for(i=0; i<propList.length; i++) {
+            reportParam += propList[i] + ':' + valueList[i];
+          }
+          reportParam += '&';
+        }
+        if(leftPropList.length > 0) {
+          reportParam += 'leftPropsValueList=';
+          for(i=0; i<leftPropList.length; i++) {
+            reportParam += leftPropList[i] + ':' + leftValueList[i];
+          }
+          reportParam += '&';
+        }
+        if(rightPropList.length > 0) {
+          reportParam += 'rightPropsValueList=';
+          for(i=0; i<rightPropList.length; i++) {
+            reportParam += rightPropList[i] + ':' + rightValueList[i];
+          }
+          reportParam += '&';
+        }
+        reportParam += 'type=' + chartCountVal + '&';
+        reportParam += 'graph=' + chartTypeVal + '&';
+        reportParam += 'unit=' + $('#unitType').val();
+
+        $('#input').val(reportParam);
+      });
 
       // export results
       $("#export").click(function (event) {
@@ -1709,7 +1874,8 @@
               }
               // add behaviors data to analysis
               for(i=0; i<params.behaviors.length; i++) {
-                if(event.name == params.behaviors[i]) { 
+                var date = new Date();
+                if(event.name == params.behaviors[i] && event.time > new Date(date.getTime() - params.behaviors_dates[i*2+1]*60*60*24*1000) && event.time < new Date(date.getTime() - params.behaviors_dates[i*2]*60*60*24*1000)) { 
                   state[event.name] = 1;
                 }
               }

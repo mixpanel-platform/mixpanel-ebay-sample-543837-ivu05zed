@@ -132,13 +132,12 @@ body {
 	margin-left: 25px;
 }
 
-#run, #export {
+#run, #export, #generate {
 	padding: 14px 32px;
 	margin: 0 auto;
-	display: block;
 }
 
-#run:hover, #export:hover {
+#run:hover, #export:hover, #generate:hover {
 	background-image: linear-gradient(#60abe7,#408edd);
 }
 
