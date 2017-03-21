@@ -4,10 +4,321 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
-    <link rel="stylesheet" type="text/css" href="./style.css">
+    <!--<link rel="stylesheet" type="text/css" href="./style.css">-->
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
     <!--<script type="text/javascript" src="./credentials.js"></script>    -->
   </head>
+  <style>
+    body {
+      max-width: 1471px;
+      min-width: 981px;
+      color: #3b3f58;    
+    }
+
+    .column-wrapper {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .column {
+      width: 49%;
+      padding: 10px;
+    }
+
+    .column-left {
+      border-right: 2px solid #d6dae5;
+    }
+
+    .column-section {
+      padding-top: 15px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #d6dae5;
+    }
+
+    .column-label {
+      display: block;
+      padding-bottom: 10px;
+    }
+
+    .inputs-bottom {
+      margin-top: 10px;
+      margin-left: 10px;
+      margin-right: 10px;
+      padding-bottom: 30px;
+      border-bottom: 2px solid #d6dae5;
+    }
+
+    .global-prop-filters {
+      padding-top: 10px;
+      padding-bottom: 25px;
+    }
+
+    .input-toggles {
+      display: flex;
+        justify-content: space-around;
+        max-width: 950px;
+      margin: 30px auto;
+    }
+
+    .rounded-toggle-wrapper {
+      display: inline-block;
+    }
+
+    .rounded-toggle-wrapper > * {
+      display: inline-block;
+    }
+
+    .rounded-toggle-wrapper:hover {
+      cursor: pointer;
+    }
+
+    .rounded-toggle-title {
+        display: block;
+        text-align: center;
+        padding-bottom: 10px;
+        font-weight: 500;
+        font-size: 1.5em;
+        color: #3b3f58;
+    }
+
+    .rounded-toggle-text {
+      font-size: 1.5em;
+      font-weight: 500;
+      vertical-align: text-bottom;
+      margin-left: 5px;
+      margin-right: 5px;
+      color: #95999c;
+      transition: all 0.22s;
+    }
+
+    .rounded-toggle-text:after {
+      content: '';
+      width: 0%;
+      display: block;
+      height: 2px;
+      background-color: silver;
+      transition: all 0.22s;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .rounded-toggle-text-selected {
+      color: #2588df;
+    }
+
+    .rounded-toggle-text-selected:after {
+      content: '';
+      width: 100%;
+      display: block;
+      height: 2px;
+      background-color: #0759a2
+    }
+
+    .rounded-toggle-bar {
+      height: 26px;
+      width: 50px;
+      background-color: #c0c0c0;
+      border-radius: 20px;
+      transition: all 0.22s;
+    }
+
+    .rounded-toggle-bar-right {
+      background-color: #dac4c4;
+    }
+
+    .rounded-toggle-circle {
+      width: 22px;
+        height: 22px;
+        background-color: #2588df;
+        border-radius: 100%;
+        margin-top: 2px;
+        transition: all 0.26s;
+    }
+
+    .rounded-toggle-circle-left {
+      margin-left: 3px;
+    }
+
+    .rounded-toggle-circle-right {
+      margin-left: 25px;
+    }
+
+    #run, #export, #generate, #annotationRun {
+      padding: 14px 32px;
+      margin: 0 auto;
+    }
+
+    #run:hover, #export:hover, #generate:hover, #annotationRun:hover {
+      background-image: linear-gradient(#60abe7,#408edd);
+    }
+
+    #left_universe, #right_universe {
+      margin-top: 15px;
+      margin-bottom: 15px;
+    }
+
+    .alert-ok:hover {
+      cursor: pointer;
+      background-color: #c7c7c7;
+    }
+
+    .comparison-table-header {
+      width: 25%;
+      text-align: center;
+      font-weight: bold;
+      font-size: 15px;
+      border: 1px solid #b2b2b2;
+    }
+
+    .comparison-table-data {
+      width: 25%;
+      text-align: center;
+      font-weight: bold;
+      font-size: 15px;
+      border: 1px solid #b2b2b2;
+    }
+
+    .annotation-table-data {
+      width: 25%;
+      text-align: center;
+      font-weight: bold;
+      font-size: 15px;
+      border: 1px solid #b2b2b2;
+    }
+
+    .events_label {
+        font-weight: bold;
+        font-size: 15px;
+        margin-right: 8px;
+        margin-left: 8px;
+        display: inline-block;
+    }
+
+    .date_select.inline.block, .event_select_left.inline.block, .event_select_right.inline.block, .event_select_filter_left.inline.block, .event_select_filter_right.inline.block, .prop_select.inline.block, .behavior_select.inline.block, .right-arrow, #add, #leftAdd, #rightAdd, #leftAddFilter, #rightAddFilter, #addProps, #addLeftProps, #addRightProps, #remove, #leftRemove, #rightRemove, #leftRemoveFilter, #rightRemoveFilter, #removeProps, #removeLeftProps, #removeRightProps {
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .event_select_left.inline.block, .event_select_right.inline.block, .event_select_filter_left.inline.block, .event_select_filter_right.inline.block {
+        max-width: 200px;
+        margin: 10px 0;
+    }
+
+    .dates, .options {
+        margin-bottom: 10px;
+    }
+
+    .right-arrow {
+        background: url(//cdn.mxpnl.com/cache/0a836ac387413f8cfa0ac97c5618c8bf/images/reports/arrow-dropshadow.png) no-repeat;
+        background-position: 0 0;
+        height: 10px;
+        width: 10px;
+        margin: 10px;
+    }
+
+    #add, #leftAdd, #rightAdd, #leftAddFilter, #rightAddFilter, #addProps, #addLeftProps, #addRightProps {
+        background: url(https://cdn.mxpnl.com/cache/db85795727e3c42d2865a215cd85876a/images/reports/funnels3/new_row_spritesheet.png);
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        position: relative;
+        margin-left: 15px;
+    }
+
+    #add:hover, #leftAdd:hover, #rightAdd:hover, #leftAddFilter:hover, #rightAddFilter:hover, #addProps:hover, #addLeftProps:hover, #addRightProps:hover {
+        background-position: 0px -30px;
+      }
+
+    #add:active, #leftAdd:active, #rightAdd:active, #leftAddFilter:active, #rightAddFilter:active, #addProps:active, #addLeftProps:active, #addRightProps:active {
+        background-position: 0px 30px;
+    }
+
+    #remove, #leftRemove, #rightRemove, #leftRemoveFilter, #rightRemoveFilter, #removeProps, #removeLeftProps, #removeRightProps {
+        background: url(https://cdn.mxpnl.com/cache/56293702dece344ed45c9d09d46cc548/images/icons/message-x-sprites.png);
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        position: relative;
+        margin-left: 15px;
+    }
+
+    #remove:hover, #leftRemove:hover, #rightRemove:hover, #leftRemove:hover, #leftRemoveFilter:hover, #rightRemoveFilter:hover,  #removeProps:hover, #removeLeftProps:hover, #removeRightProps:hover {
+        background-position: 0px 18px;
+    }
+
+    #run, #annotationRun, #export, #generate {
+        clear:both;
+        vertical-align: 1px;
+        text-align: center;
+        padding: 20px 10px;
+        background-color: #61adf0;
+        background-image: -webkit-linear-gradient(#6ab5f2,#53a0ee);
+        background-image: linear-gradient(#6ab5f2,#53a0ee);
+        box-shadow: inset 0 1px 1px #77bdf4,0 2px 2px -1px rgba(0,0,0,0.2);
+        text-transform: uppercase;
+        border: 1px solid #4d93d7;
+        color: #fff;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.2);
+        border-radius: 3px;
+        cursor: pointer;
+        font-weight: bold;
+        max-width: 150px;
+        margin-left: 20px;
+        display: inline-block;
+    }
+
+    .alert {
+        display: none;
+        position: fixed;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+        top: 30%;
+        margin-top: -75px;
+        z-index: 20;
+        background-color: #fbfbfb;
+        border: 1px solid #c4c9d8;
+        padding: 20px;
+        width: 300px;
+        min-height: 150px;
+        border-radius: 5px;
+    }
+
+    .alert-title {
+        text-transform: uppercase;
+        font-weight: 600;
+        margin: 15px;
+    }
+
+    .alert-content {
+        margin: 15px;
+        line-height: 25px;
+    }
+
+    .alert-ok {
+        display: inline-block;
+        margin-left: 10px;
+        position: absolute;
+        bottom: 15px;
+        right: 35px;
+        padding: 10px 16px;
+        font-weight: 600;
+        background-color: #dedede;
+        border-radius: 3px;
+        transition: all 0.2s;
+    }
+
+    #input {
+        width: 75%;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: space-around;
+        max-width: 950px;
+      margin: 30px auto;
+    }
+  </style>
   <body class="mixpanel-platform-body">
     <div class="mixpanel-platform-section">
       <div class="column-wrapper">
@@ -1025,7 +1336,7 @@
                 fromDate = new Date();
                 dateSelectTime = dateSelect.val();
                 toDate = new Date(new Date().getTime() - 60*60*24*1000*value.split(",")[1]);
-                fromDate = new Date(toDate.getTime() - 60*60*24*1000*value.split(",")[0]);
+                fromDate = new Date(new Date().getTime() - 60*60*24*1000*value.split(",")[0]);
                 dateSelectTime.from = fromDate;
                 dateSelectTime.to = toDate;
                 dateSelect.val(dateSelectTime);
@@ -1035,7 +1346,7 @@
                 fromDate = new Date();
                 dateSelectTime = dateSelect.val();
                 toDate = new Date(new Date().getTime() - 60*60*24*1000*value.split(",")[1]);
-                fromDate = new Date(toDate.getTime() - 60*60*24*1000*value.split(",")[0]);
+                fromDate = new Date(new Date().getTime() - 60*60*24*1000*value.split(",")[0]);
                 dateSelectTime.from = fromDate;
                 dateSelectTime.to = toDate;
                 dateSelect.val(dateSelectTime);
@@ -1083,14 +1394,14 @@
             if (dateValue != '') {
               leftFilterDates.push(dateValue);
             }
-            if(dateValue > Math.floor((new Date().getTime() - $('#leftDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#leftDates').val().to)/(60*60*24*1000))) {
+            if(dateValue > Math.floor((new Date().getTime() - $('#leftDates').val().from)/(60*60*24*1000)) + 1 || dateValue < Math.floor((new Date().getTime() - $('#leftDates').val().to)/(60*60*24*1000))) {
               validLeftDates = false;
             }
             var dateValue = $($('.behavior_selector_to_left')[i]).val();
             if (dateValue != '') {
               leftFilterDates.push(dateValue);
             }
-            if(dateValue > Math.floor((new Date().getTime() - $('#leftDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#leftDates').val().to)/(60*60*24*1000))) {
+            if(dateValue > Math.floor((new Date().getTime() - $('#leftDates').val().from)/(60*60*24*1000)) + 1 || dateValue < Math.floor((new Date().getTime() - $('#leftDates').val().to)/(60*60*24*1000))) {
               validLeftDates = false;
             }
           }
@@ -1124,14 +1435,14 @@
             if (dateValue != '') {
               rightFilterDates.push(dateValue);
             }
-            if(dateValue > Math.floor((new Date().getTime() - $('#rightDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#rightDates').val().to)/(60*60*24*1000))) {
+            if(dateValue > Math.floor((new Date().getTime() - $('#rightDates').val().from)/(60*60*24*1000)) + 1 || dateValue < Math.floor((new Date().getTime() - $('#rightDates').val().to)/(60*60*24*1000))) {
               validRightDates = false;
             }
             var dateValue = $($('.behavior_selector_to_right')[i]).val();
             if (dateValue != '') {
               rightFilterDates.push(dateValue);
             }
-            if(dateValue > Math.floor((new Date().getTime() - $('#rightDates').val().from)/(60*60*24*1000)) || dateValue < Math.floor((new Date().getTime() - $('#rightDates').val().to)/(60*60*24*1000))) {
+            if(dateValue > Math.floor((new Date().getTime() - $('#rightDates').val().from)/(60*60*24*1000)) + 1 || dateValue < Math.floor((new Date().getTime() - $('#rightDates').val().to)/(60*60*24*1000))) {
               validRightDates = false;
             }
           }
@@ -1318,8 +1629,8 @@
         console.log(funnelEventsLeft);
 
         var leftParams = {
-          to: $('#leftDates').val().to,
-          from: $('#leftDates').val().from,
+          to: new Date($('#leftDates').val().to.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
+          from: new Date($('#leftDates').val().from.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
           events: funnelEventsLeft,
           selector: totalLeftEvents,
           behaviors: leftEventFilterList,
@@ -1354,8 +1665,8 @@
         console.log(funnelEventsRight);
 
         var rightParams = {
-          to: $('#rightDates').val().to,
-          from: $('#rightDates').val().from,
+          to: new Date($('#rightDates').val().to.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
+          from: new Date($('#rightDates').val().from.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
           events: funnelEventsRight,
           selector: totalRightEvents,
           behaviors: rightEventFilterList,
@@ -1370,19 +1681,24 @@
         console.log(rightParams);
 
         var leftSegParams = {
-          to: $('#leftDates').val().to,
-          from: $('#leftDates').val().from,
+          to: new Date($('#leftDates').val().to.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
+          from: new Date($('#leftDates').val().from.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
           selector: funnelBehaviorsLeft,
           behaviors_dates: leftFilterDateList,
           unit: $('#unitType').val(),
         }
+        console.log('left uniques params to query:');
+        console.log(leftSegParams);
+
         var rightSegParams = {
-          to: $('#rightDates').val().to,
-          from: $('#rightDates').val().from,
+          to: new Date($('#rightDates').val().to.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
+          from: new Date($('#rightDates').val().from.getTime() + 60*60*1000*3), //adding buffer to date to accomodate for DST issues
           selector: funnelBehaviorsRight,
           behaviors_dates: rightFilterDateList,
           unit: $('#unitType').val(),
         }
+        console.log('right uniques params to query:');
+        console.log(rightSegParams);
 
         var scriptCount = $('#jql-count').html();
 
@@ -1596,7 +1912,6 @@
         }
         var dateSelect = $('#leftDates').MPDatepicker();
         dateSelectTime = dateSelect.val();
-        console.log(new Date((new Date().getTime() - new Date(dateSelectTime.to).getTime())))
         var range = Math.floor((dateSelectTime.to - dateSelectTime.from)/(60*60*24*1000));
         var to = Math.floor((new Date().getTime() - new Date(dateSelectTime.to).getTime())/(60*60*24*1000));
         var from = to + range;
@@ -1676,66 +1991,69 @@
     </script>
 
     <script id='jql-count'>
-      function main() {
-        return Events({
-          from_date: params.from.substring(0,10),
-          to_date:   params.to.substring(0,10),
-        })
-        .groupByUser([function(event) { return findDay(params.unit, params.from, event.time) }], mixpanel.reducer.count())
-        .groupBy([function(item) { return item.key[1]; }], mixpanel.reducer.count())
-        .map(function(item) {
-          var obj = {};
-          return {
-            'Date': item.key[0],
-            'Count': item.value
-          }
-        })
-        .filter(function(item) {
-          return item.Date !== null;
-        })
-      }
+        function main() {
+          return Events({
+            from_date: params.from.substring(0,10),
+            to_date:   params.to.substring(0,10),
+            event_selectors: params.selector
+          })
+          .groupByUser([function(event) { return findDay(params.unit, params.from, event.time) }], mixpanel.reducer.count())
+          .groupBy([function(item) { return item.key[1]; }], mixpanel.reducer.count())
+          .map(function(item) {
+            var obj = {};
+            return {
+              'Date': item.key[0],
+              'Count': item.value
+            }
+          })
+          .filter(function(item) {
+            return item.Date !== null;
+          })
+        }
 
-      function findDay(unit, from, time) {
-        var find = new Date(time);
-        var current = new Date(from);
-        if(unit == 'day') {
-          var seconds = 1000 * 60 * 60 * 24;
-        } else if(unit == 'week') {
-          var seconds = 1000 * 60 * 60 * 24 * 7;
-        } else if(unit == 'month') {
-          var seconds = 1000 * 60 * 60 * 24 * 30;
-          var month = true;
-        }
-        while(current < find) {
-          if(month === true) {
-            if(current.getMonth() == 12) {
-              if(new Date(current.getFullYear() + 1, 1, 1) < find) {
-                current = new Date(current.getFullYear() + 1, 1, 1);
+        function findDay(unit, from, time) {
+          var find = new Date(time);
+          var current = new Date(from);
+          if(unit == 'day') {
+            var seconds = 1000 * 60 * 60 * 24;
+          } else if(unit == 'week') {
+            var seconds = 1000 * 60 * 60 * 24 * 7;
+          } else if(unit == 'month') {
+            var seconds = 1000 * 60 * 60 * 24 * 30;
+            var month = true;
+          }
+          while(current < find) {
+            if(month === true) {
+              if(current.getMonth() == 12) {
+                if(new Date(current.getFullYear() + 1, 1, 1) < find) {
+                  current = new Date(current.getFullYear() + 1, 1, 1);
+                } else {
+                  break;
+                }
+              } else {
+                if(new Date(current.getFullYear(), current.getMonth() + 1, 1) < find) {
+                  current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+                } else {
+                  break;
+                }
+              }
+            } else {
+              if(new Date(current.getTime() + seconds) < find) {
+                current = new Date(current.getTime() + seconds);
               } else {
                 break;
               }
-            } else {
-              if(new Date(current.getFullYear(), current.getMonth() + 1, 1) < find) {
-                current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
-              } else {
-                break;
-              }
-            }
-          } else {
-            if(new Date(current.getTime() + seconds) < find) {
-              current = new Date(current.getTime() + seconds);
-            } else {
-              break;
             }
           }
+          var remainder = new Date().getTime();
+          var yestMidnight = new Date(remainder - remainder % (24 * 60 * 60 * 1000));
+          var date = new Date(yestMidnight.getTime() + 24 * 60 * 60 * 1000);
+          if(time > new Date(date.getTime() - params.behaviors_dates[1]*60*60*24*1000) && time < new Date(date.getTime() - params.behaviors_dates[0]*60*60*24*1000)) {
+            return current.toISOString().substring(0,10);
+          } else {
+            return null;
+          }
         }
-        var date = new Date();
-        if(time > new Date(date.getTime() - params.behaviors_dates[1]*60*60*24*1000) && time < new Date(date.getTime() - params.behaviors_dates[0]*60*60*24*1000)) {
-          return current.toISOString().substring(0,10);
-        } else {
-          return null;
-        }
-      }
     </script>
 
     <script id='jql-funnel'>
@@ -1784,7 +2102,9 @@
               }
               // add behaviors data to analysis
               for(i=0; i<params.behaviors.length; i++) {
-                var date = new Date();
+                var remainder = new Date().getTime();
+                var yestMidnight = new Date(remainder - remainder % (24 * 60 * 60 * 1000));
+                var date = new Date(yestMidnight.getTime() + 24 * 60 * 60 * 1000);
                 if(event.name == params.behaviors[i] && event.time > new Date(date.getTime() - params.behaviors_dates[i*2+1]*60*60*24*1000) && event.time < new Date(date.getTime() - params.behaviors_dates[i*2]*60*60*24*1000)) { 
                   state[event.name] = 1;
                 }
